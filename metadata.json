@@ -1,0 +1,6 @@
+{
+  "name": "Detersur Química & Limpieza",
+  "description": "Distribuidora directa de insumos químicos, artículos de higiene institucional y fraccionado de productos de limpieza para el hogar y comercios.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

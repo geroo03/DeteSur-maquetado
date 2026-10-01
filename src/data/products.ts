@@ -1,0 +1,277 @@
+import { Product } from '../types';
+
+export const LOGO_URL =
+  'https://lh3.googleusercontent.com/aida/AEtjO1VHVo8x3Wmzp4zzk2wi-KcMc1UKQse8Vg2249H4eJDAvUFieb6lonB7JtNW-ddbUQmZ6rup4Ku7tqVUh9_59OdVwbg3gp_OABMatQ8_FJPQJ98D2_SdC_VKFRJEy-dkUv8hePsEFqhy1zybw2zdB7XYlawNjGhtbwSDiO8XFfIftwvhk27QxI7yvbOcJElxVqig5qtYMk3BmOXH3tsQ5lEa4gZTi3gsl4Qrhmbop-SfGKzDnc_7c6wy9gP_';
+
+export const LOGO_3D_URL =
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuAhPd-BkBU-4W0YlAW9c2_5oW8-KoUODQ4Gn8ke4g6-0b0xUHFp4L_MAIUcOYyTmaq988um0oDGniPPi3XB-l6uWKPJ7FJhQgebcb0MAudLgi-qkxnPE6S2vzwLf5QEgvZ6FypAeuErwlvyu3fR7lwfbJAmSFpKn8r6LjGl4FOmCmUpBmqGb7XvhEeY7NaXL81EAXCLX4NFm8ugFVQ4yC5tYBoLuSxJ1STf2QIF-YPEXdl7GML8EX-Bsg';
+
+export const PRODUCTS: Product[] = [
+  {
+    id: 'lavandina-55g',
+    name: 'Lavandina Concentrada 55g/L Detersur',
+    brand: 'Detersur',
+    category: 'sueltos',
+    price: 3450,
+    packageType: 'Bidón x 5 Litros',
+    badge: 'Química Suelta',
+    description:
+      'Fórmula de alta densidad y acción bactericida inmediata. Apta desinfección de aguas, superficies comerciales, gastronómicas y uso doméstico intensivo.',
+    details: 'Desinfección profunda sin aroma residual agresivo.',
+    isBulk: true,
+    dilution: '100ml en 10L de agua',
+    density: '1.09 g/cm³',
+    origin: 'Cloro Virgen',
+    rating: 4.9,
+    reviewsCount: 128,
+    salesCount: '+1.450 bidones este mes',
+    sku: 'DET-LAV-55G5L',
+    rnpa: '0254129',
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuCdZi-Bl2cExZBdQJ3vjryhix0GFwFYDD2CN8pIe19QKefYpac7wjmDZYFUzaRCENTGI9-CLxkRTcTC0KBpZl9MQMZoUbRAigmESYGe65tpU_Ylh6h0b78fsGTR5XtFCUcFmIOM1nG51YBPFGI8TTKq44EIMWg4GZQ_vc4vVUrTDG8lfSDleRYXRINFE0aZxalPozaDjNT3_Md6WjysH2yO9UTcwMvF-f3c8zX9lzp7hwCbzIJhsnVYmg',
+    presentations: [
+      {
+        id: '1L',
+        title: '1 Litro (Botellón)',
+        volume: '1L',
+        price: 850,
+        unitPrice: 850,
+        badge: 'Envase virgen PEAD',
+      },
+      {
+        id: '5L',
+        title: '5 Litros (Bidón c/ manija)',
+        volume: '5L',
+        price: 3450,
+        unitPrice: 690,
+        badge: 'Más Elegido',
+        isPopular: true,
+      },
+      {
+        id: '10L',
+        title: '10 Litros Reforzado',
+        volume: '10L',
+        price: 6500,
+        unitPrice: 650,
+        badge: 'Tapa precinto de seguridad',
+      },
+      {
+        id: 'recarga-5L',
+        title: 'Recarga x 5L (Suelto)',
+        volume: '5L Suelto',
+        price: 2590,
+        unitPrice: 518,
+        badge: 'Súper Ahorro',
+        isEco: true,
+      },
+    ],
+  },
+  {
+    id: 'jabon-liquido-matic',
+    name: 'Jabón Líquido Baja Espuma Tipo Matic',
+    brand: 'ROMYL',
+    category: 'ropa',
+    price: 5950,
+    packageType: 'Bidón x 5 Litros',
+    badge: 'Rinde 50 lavados',
+    description:
+      'Jabón líquido para ropa baja espuma tipo Ariel. Enzimas de máxima remoción en agua fría con fragancia floral de larga duración.',
+    details: 'Ropa blanca y color en lavarropas automáticos.',
+    isBulk: true,
+    dilution: '100ml por carga de lavado',
+    rating: 4.8,
+    reviewsCount: 94,
+    salesCount: '+980 bidones este mes',
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuCFf1eGnK3htmUQn9m4L8rz84LMMkJt2EwiUT9Mq3WzkSGKT4rQrfx_fguly6BK-6uSR_JVbzAg9ZQaGKYE3G3Crt-ac8XGd5WBkCsGq6rTP4-YQMSp9xPYw3XVfTlHmJ0l0jfBeSX9hc4lAnYDioFIOAAMPNeeGBUHn3-nvwkjWwZNumcrZ-nX50FUIWWPQ_zPHDw0qupwW2fM7vKV90kXfmdULJMmOdSIc5alEZ_ftaYBffozUcJdHQ',
+    presentations: [
+      {
+        id: '5L',
+        title: 'Bidón x 5 Litros',
+        volume: '5L',
+        price: 5950,
+        unitPrice: 1190,
+        isPopular: true,
+      },
+      {
+        id: 'recarga-5L',
+        title: 'Recarga x 5L Suelto',
+        volume: '5L Suelto',
+        price: 4600,
+        unitPrice: 920,
+        isEco: true,
+      },
+    ],
+  },
+  {
+    id: 'desengrasante-cocina-express',
+    name: 'Desengrasante Cocina Industrial Express',
+    brand: 'XPER',
+    category: 'cocina',
+    price: 2180,
+    packageType: 'Gatillo 750 ml',
+    badge: 'Antigrasa',
+    description:
+      'Poder disolvente activo de aceites y grasas pesadas para hornos, extractores y planchas gastronómicas en 60 segundos.',
+    details: 'Fórmula alcalina de acción rápida.',
+    isBulk: false,
+    rating: 4.9,
+    reviewsCount: 76,
+    salesCount: '+640 unidades este mes',
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuCcHHbzEPiHonw61UiEtHVUnHqCexSXKp3SGR6l1Z0eB5HAvtrQNsZLK3Ew0HpO9M4IxGZ8Fv_8WxEsAMStM5Z75hG8q81g-K83ToDwwQDDe7FbQ-TsxjnUhqQT1OwpLXia_8dZpooqtKRpVnZ9niFmEFnz3-5demrtir3sVrPnTKitIxHdpSVlYI8HVG2vwmEVyCE0QH6E6JmNF0Q8GBAry1a1rgBqcJRgOcyx01qoUqACR2OjUDjDqg',
+    presentations: [
+      {
+        id: '750ml',
+        title: 'Gatillo Pulverizador 750 ml',
+        volume: '750ml',
+        price: 2180,
+        unitPrice: 2906,
+        isPopular: true,
+      },
+      {
+        id: 'bidon-5L',
+        title: 'Bidón Recarga 5L',
+        volume: '5L',
+        price: 8900,
+        unitPrice: 1780,
+      },
+    ],
+  },
+  {
+    id: 'lustramuebles-blem',
+    name: 'Lustramuebles Aerosol Lavanda Clásica',
+    brand: 'Blem',
+    category: 'pisos',
+    price: 3120,
+    packageType: 'Aerosol 360 cm³',
+    badge: 'Original',
+    description:
+      'Brillo instantáneo y protección antiestática contra el polvo para maderas tratadas, fórmicas y cuero.',
+    details: 'Aroma fresco lavanda.',
+    isBulk: false,
+    rating: 4.7,
+    reviewsCount: 52,
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuAaY-ErunhuBD95LxFKQQXqtFmRVzfTavYjRxb7TcTxleuj0mVAo3NeSCX1h9zRm8-VY8NXR9IwzsiXYqSYNKJsdlNYQizqIntmsJBUuS2PBUVuPb-_tal8ERZAKWQIEixQ16QWlcgbhNV-lvXzrxneVlohRxcztlf8p05vaBTtgR__nbQycEyhjBxkjTYoEdIGnjjur-4NlMW3AUAkwgoqWHCx-CKci3TPDT4UXISkJatX_YqpfMQ1bQ',
+  },
+  {
+    id: 'pastillas-cloro-aquamar',
+    name: 'Pastillas de Cloro Triple Acción 200g',
+    brand: 'AQUAMAR',
+    category: 'piscinas',
+    price: 11400,
+    packageType: 'Pote x 1 Kg (5 past.)',
+    badge: 'Verano / Piscinas',
+    description:
+      'Cloro estabilizado, alguicida y clarificador en pastillas compactas de disolución lenta. Mantiene el agua cristalina por semanas.',
+    details: 'Apto skimmers y dosificadores flotantes.',
+    isBulk: true,
+    rating: 4.9,
+    reviewsCount: 88,
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuA8o0QrYU9rxNWQ4mWmAoIau8lkEFZDPvog1pvA5xZ6VTuEXzkmScxbB-I90_lLUDvq8KDGkJvkWrmr2jpcgNevbEe0nzRn6speLSeaOFuXGkNaoPuupi1Qqq616YZrI8xXV6skvjV999gHkEYWnukg5Sqo4DRGad2aDJ1fupK4XoZKEdE_RLHOlo8IsNqQALDtK5w-LmylgQtCY-j5nwYPWtgAdN_3mjnZ36STz1bE_jc-nQdp7NXm-g',
+  },
+  {
+    id: 'cera-ceramicol',
+    name: 'Cera Autobrillo Incolora p/ Mosaicos y Madera',
+    brand: 'Ceramicol',
+    category: 'pisos',
+    price: 4250,
+    packageType: 'Botella x 1 Litro',
+    badge: 'Brillo espejo',
+    description:
+      'Película polimérica ultrabrillante resistente a las pisadas. No resbala y sella poros en mosaicos, cerámicos y baldosas.',
+    details: 'Alto tránsito sin necesidad de lustradora.',
+    isBulk: false,
+    rating: 4.8,
+    reviewsCount: 63,
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuBtWEbNOYeSpjy-Y_5Slk1Ile1xcLWt-2BuNB6_a3Ff17yYwyieoAt3v-JpViM5lIl5gI_ds9WzIGp_YPF9gOq5xKONqZKAp10FEzBxlUwFiya8I1rFCDkZ0_Rzh2zDzXq4bxDQXMG2jTfOgIyQdqarsE9vhfgrUfORw0nbHG1ez8VVbBlnEwkhYrXM_bDNaDiLWxF-Y6H6uCuPekxHBY9Ab15B1ZQFi1nOlgg4j8yyBxRyz6AGPGOryw',
+  },
+  {
+    id: 'detergente-sina-concentrado',
+    name: 'Detergente Concentrado Neutro Espumígeno',
+    brand: 'SINA',
+    category: 'sueltos',
+    price: 4890,
+    packageType: 'Botellón x 5 Litros',
+    badge: 'Alto rendimiento',
+    description:
+      'Detergente lavavajillas neutro con 20% de materia activa. Espuma densa de prolongado poder desengrasante suave con la piel.',
+    details: 'Rinde más de 200 lavados comerciales.',
+    isBulk: true,
+    rating: 4.8,
+    reviewsCount: 47,
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuAeYxO94lWG6Sr1RTKxzRVVR5qYCo798AQGi-gkOd6sDsc_Yra5ZM03Q4FtJTCTEBuWdQh3sMmN1sciLKlQhYezDQa882aSCjoPOtwUeGHWyWmxvqIdctK2UJPOYlv-79lXSlcgEyQ1XKrJB9lR94-tUGNNBx6lM521a66jXIjFtWmTs1Zbkpu0oG8dMMgvNVif2netYP8jr5ah08G_s13gu4EhBYYR1XD1X9zpVAO01wiRhlL2Nm7wag',
+  },
+  {
+    id: 'papel-higienico-institucional',
+    name: 'Papel Higiénico Institucional Hoja Simple 300m',
+    brand: 'Detersur Papeles',
+    category: 'papeleria',
+    price: 7600,
+    packageType: 'Pack x 4 Rollos (300m)',
+    badge: 'Mayorista',
+    description:
+      'Rollos gigantes de alto metraje para dispensers institucionales en oficinas, escuelas, gimnasios y centros médicos.',
+    details: '100% fibra virgen de alta absorción.',
+    isBulk: true,
+    rating: 4.7,
+    reviewsCount: 39,
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuBLTEizmsfTrzryp-ATYUUnfQ2Q5GQOq0W9r3cEEq1JwaG3-7Due14-Qk-rWKw3VmB9NYpRXJ0akILYIvl_YSSGqjhamygl6hJQ2jFPcW423LBIfrsvANKW-RwIZcHV_Ye25oC03iLkk3zoEkAGq6B5M7N2b75weFfV-fr8aDul4D1HZDF3g_1Vr1NZ88TpRSWcJbvcuCpxE2_vgwnESOQ0Gy5R8-M7q4ydjPXfYqp3gNxExB-sSGi25w',
+  },
+  {
+    id: 'limpiavidrios-romyl',
+    name: 'Limpiavidrios Cristalino Desempañante',
+    brand: 'ROMYL',
+    category: 'cocina',
+    price: 1490,
+    packageType: 'Repuesto Eco 500 ml',
+    badge: 'Económico',
+    description:
+      'Fórmula con bioalcohol que evapora al instante sin dejar vetas ni marcas en cristales, espejos y ventanales.',
+    details: 'Efecto antiestático y desempañante.',
+    isBulk: false,
+    rating: 4.6,
+    reviewsCount: 31,
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuBjlGEOgQSNvJoyPFtXwT-nqpwI6JrhdN1NSWw7N3CiL7dDiRlhXJ3k1rnfiOzBPlECOMUxrWdofD0Faa9-dBFPv5HBL6ZFKO43Wx9sXvNqn9MALpMVCoVei0lZd_mSBEHbirmzqoflQ8TB_2ah7jrUSDgUVWT_GI-kCGDsMr2TRsoYrXNqu6vprin-GHFB8XEjkwlC-Bnb5vVvQ3cANuqroSeC9PbdAi8sYmiHgdwXbOWZoR38TxoWfw',
+  },
+  {
+    id: 'mopa-giratoria-detersur',
+    name: 'Mopa Giratoria con Balde Centrifugador de Acero',
+    brand: 'Detersur Pro',
+    category: 'accesorios',
+    price: 24990,
+    packageType: 'Set + 2 Repuestos',
+    badge: 'Oferta destacada',
+    description:
+      'Sistema centrífugo 360° con canasto de acero inoxidable, cabo de aluminio telescópico y 2 mopas de microfibra lavables.',
+    details: 'Ideal limpieza sin mojarse las manos.',
+    isBulk: false,
+    rating: 4.9,
+    reviewsCount: 154,
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuDDELkV0UolVBv5TlxQElvnpIeUdGPcQNOITcVz4ZJRhys2B-kaXBWexc8dv5vm5rKWL4CLl_8pGbM6-N8GNZJ2YfG-Z3NSuFFENon8hjlj-EpzrpB-ALVPZcLl-OAg6XzX6xWf1zINeIYk0hw2EPFPRGWO2pMpIzBTtvcPmUyw6PGIAl6Co9lybo616-NnW_c0f8LSkJT3IemNSG7cgwpntycZDZiorTU8DYu_PwEma_mTU3haTOknKA',
+  },
+  {
+    id: 'guantes-latex-reforzados',
+    name: 'Guantes de Látex Reforzados',
+    brand: 'Detersur Pro',
+    category: 'accesorios',
+    price: 1150,
+    packageType: 'Talles S - M - L',
+    badge: 'Protección Química',
+    description:
+      'Interior afelpado de algodón antialérgico y palma con relieve antideslizante para manejo seguro de químicos.',
+    details: 'Extra resistencia a perforaciones.',
+    isBulk: false,
+    rating: 4.8,
+    reviewsCount: 82,
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuCUQyQiiQqajWecFsdQX-XKlPghuETI0JTLesuoDZhQOuGz2iapmXA_pq1ryxXbxk4M3x_uIJj4zwwF2wRRdTBEG9YpYrVGeS6IjRBph1bQB7oF9JYmj30Dx4X1BzGKSNTJtf-QdP0pQSLtF5vhzw8WxtzQfsgYCby1bVLJIaIggGlAkr_gox09TeuxKiEpvsH2ZwnrgnsVfwZwZiMHKrG-ubmQMD5QkDuMVQUNadQWJpnO6JYws9p-lQ',
+  },
+];
