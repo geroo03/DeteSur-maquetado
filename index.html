@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Detersur Química & Limpieza</title>
     <meta name="description" content="Distribuidora directa de insumos químicos, artículos de higiene institucional y fraccionado de productos de limpieza para el hogar y comercios." />
+    <meta name="theme-color" content="#f9f9ff" />
     <meta property="og:title" content="Detersur Química & Limpieza" />
     <meta property="og:description" content="Distribuidora directa de insumos químicos, artículos de higiene institucional y fraccionado de productos de limpieza para el hogar y comercios." />
     <meta property="og:type" content="website" />
@@ -13,9 +14,170 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+
+    <script>
+      /*
+       * Recuperación de documento cacheado.
+       *
+       * GitHub Pages sirve index.html con Cache-Control: max-age=600, pero en
+       * cada deploy los assets llevan un hash nuevo y los anteriores se borran.
+       * Durante esos 10 minutos, un navegador que ya tenía el documento viejo
+       * pide un .js que ya devuelve 404 y se queda en blanco. Pasa sobre todo
+       * en el celular, que conserva la pestaña abierta.
+       *
+       * Acá detectamos que un asset propio no cargó y recargamos una sola vez
+       * contra una URL distinta, para esquivar la copia cacheada.
+       */
+      (function () {
+        var GUARD = 'detersur:recarga-por-cache';
+        var booted = false;
+
+        // Si venimos de una recarga de recuperación, sacamos el marcador de la
+        // barra de direcciones para no dejar la URL sucia.
+        try {
+          var url = new URL(window.location.href);
+          if (url.searchParams.has('_r')) {
+            url.searchParams.delete('_r');
+            window.history.replaceState(
+              null,
+              '',
+              url.pathname + (url.search === '?' ? '' : url.search) + url.hash
+            );
+          }
+        } catch (e) {}
+
+        function recuperar() {
+          try {
+            if (sessionStorage.getItem(GUARD)) return; // ya lo intentamos
+            sessionStorage.setItem(GUARD, '1');
+          } catch (e) {
+            return; // sin sessionStorage no hay cómo evitar un bucle: no tocamos
+          }
+          try {
+            var next = new URL(window.location.href);
+            next.searchParams.set('_r', Date.now().toString(36));
+            window.location.replace(next.toString());
+          } catch (e) {
+            window.location.reload();
+          }
+        }
+
+        // Los recursos no burbujean su error: hay que escuchar en captura.
+        window.addEventListener(
+          'error',
+          function (event) {
+            var el = event.target;
+            if (!el || (el.tagName !== 'SCRIPT' && el.tagName !== 'LINK')) return;
+            var src = el.src || el.href || '';
+            // Solo nuestros propios bundles; las fuentes de Google que fallen
+            // no justifican recargar.
+            if (src.indexOf('/assets/') === -1) return;
+            recuperar();
+          },
+          true
+        );
+
+        // Si la app montó, limpiamos el marcador para que una próxima visita
+        // con el documento viejo pueda volver a recuperarse.
+        window.addEventListener('load', function () {
+          setTimeout(function () {
+            var root = document.getElementById('root');
+            booted = !!(root && root.children.length);
+            if (booted) {
+              try { sessionStorage.removeItem(GUARD); } catch (e) {}
+            }
+          }, 1200);
+        });
+
+        // Último recurso: si a los 8 segundos no montó nada y ya gastamos la
+        // recarga, mostramos un aviso en vez de una pantalla vacía.
+        setTimeout(function () {
+          var root = document.getElementById('root');
+          if (root && root.children.length) return;
+          var fallback = document.getElementById('arranque');
+          if (fallback) fallback.setAttribute('data-estado', 'error');
+        }, 8000);
+      })();
+    </script>
+
+    <style>
+      /* Pantalla de arranque: se ve mientras baja el bundle y queda tapada por
+         la app al montar. Vive acá para no depender de ningún asset. */
+      #arranque {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        background: #f9f9ff;
+        color: #005d90;
+        font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+        text-align: center;
+        padding: 24px;
+      }
+      #arranque .punto {
+        width: 44px;
+        height: 44px;
+        border-radius: 999px;
+        border: 3px solid #cde5ff;
+        border-top-color: #0077b6;
+        animation: arranque-giro 0.9s linear infinite;
+      }
+      #arranque p {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: #404850;
+      }
+      #arranque .error,
+      #arranque[data-estado='error'] .cargando {
+        display: none;
+      }
+      #arranque[data-estado='error'] .error {
+        display: block;
+      }
+      #arranque[data-estado='error'] .punto {
+        animation: none;
+        border-color: #ffdad6;
+        border-top-color: #ba1a1a;
+      }
+      #arranque a {
+        color: #0077b6;
+        font-weight: 700;
+      }
+      @keyframes arranque-giro {
+        to { transform: rotate(360deg); }
+      }
+      /* En cuanto React monta algo dentro de #root, el arranque desaparece. */
+      #root:not(:empty) + #arranque {
+        display: none;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #arranque .punto { animation: none; }
+      }
+    </style>
   </head>
   <body class="bg-[#f9f9ff] text-[#091b38] antialiased selection:bg-[#70f8e8] selection:text-[#007168]">
     <div id="root"></div>
+
+    <div id="arranque">
+      <div class="punto"></div>
+      <p class="cargando">Cargando Detersur…</p>
+      <p class="error">
+        No pudimos cargar la tienda.<br />
+        Probá <a href="javascript:location.reload()">recargar la página</a>.
+      </p>
+    </div>
+
+    <noscript>
+      <div style="padding:32px;font-family:system-ui,sans-serif;text-align:center">
+        <h1 style="color:#005d90">Detersur Química &amp; Limpieza</h1>
+        <p>Esta tienda necesita JavaScript activado para funcionar.</p>
+      </div>
+    </noscript>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
