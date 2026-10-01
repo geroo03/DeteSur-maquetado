@@ -8,7 +8,11 @@ pedido funcionando de punta a punta, sin backend.
 
 React 19 · TypeScript strict · Vite 8 · Tailwind CSS 4
 
-<img src="docs/home.jpg" alt="Pantalla de inicio" width="100%">
+### 👉 [Ver el demo en vivo](https://geroo03.github.io/DeteSur-maquetado/)
+
+<a href="https://geroo03.github.io/DeteSur-maquetado/">
+  <img src="docs/home.jpg" alt="Pantalla de inicio" width="100%">
+</a>
 
 </div>
 
@@ -29,6 +33,9 @@ npm run dev      # http://localhost:3000
 | `npm run lint` | Chequeo de tipos con `tsc --noEmit` |
 
 No necesita variables de entorno ni servicios externos.
+
+> `npm run preview` sirve el build bajo `/DeteSur-maquetado/`, igual que
+> GitHub Pages, para que lo que probás localmente sea lo que se publica.
 
 ### Dos atajos para probarlo rápido
 
@@ -211,6 +218,24 @@ escritorio y en móvil:
 - Sin scroll horizontal a 390 px
 
 ---
+
+## Despliegue
+
+Cada push a `main` dispara
+[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml), que corre el
+chequeo de tipos, construye y publica en GitHub Pages:
+**[geroo03.github.io/DeteSur-maquetado](https://geroo03.github.io/DeteSur-maquetado/)**
+
+El routing por hash ayuda acá: Pages sirve archivos estáticos sin reescrituras,
+así que `#/producto/lavandina-55g` funciona al recargar y al compartir el link,
+sin necesitar un `404.html` de fallback.
+
+Para desplegar en la raíz de un dominio (Vercel, Netlify, dominio propio) basta
+con construir sin prefijo:
+
+```bash
+BASE_PATH=/ npm run build
+```
 
 ## Limitaciones conocidas
 
