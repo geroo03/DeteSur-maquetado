@@ -16,7 +16,7 @@ import { ConfirmationView } from './views/ConfirmationView';
 
 /** Ambient gradient orbs that drift behind every page. */
 const AmbientBackground: React.FC = () => (
-  <div aria-hidden="true" className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+  <div aria-hidden="true" className="ambient-bg fixed inset-0 pointer-events-none overflow-hidden z-0">
     <div className="absolute -top-32 -left-20 w-96 h-96 rounded-full bg-secondary-fixed/30 blur-3xl animate-drift" />
     <div
       className="absolute top-1/4 -right-24 w-80 h-80 rounded-full bg-primary-fixed/40 blur-3xl animate-float-slow"

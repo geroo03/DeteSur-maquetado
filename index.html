@@ -17,6 +17,34 @@
 
     <script>
       /*
+       * Nivel de efectos según el equipo.
+       *
+       * El vidrio esmerilado (backdrop-filter) y los orbes borrosos animados
+       * obligan al navegador a recomponer capas enormes en cada frame. En un
+       * teléfono de gama baja eso agota la memoria de GPU: la pestaña se queda
+       * en blanco y el navegador la reinicia sola.
+       *
+       * Marcamos los equipos limitados para que el CSS apague esos efectos.
+       * Se corre antes del primer pintado para que no se vea el cambio.
+       */
+      (function () {
+        try {
+          var n = navigator;
+          var pocaRam = typeof n.deviceMemory === 'number' && n.deviceMemory <= 4;
+          var pocosNucleos =
+            typeof n.hardwareConcurrency === 'number' && n.hardwareConcurrency <= 4;
+          // En pantalla de teléfono el desenfoque casi no se percibe y cuesta
+          // igual, así que ahí tampoco vale la pena.
+          var pantallaChica = window.innerWidth < 768;
+          if (pocaRam || pocosNucleos || pantallaChica) {
+            document.documentElement.setAttribute('data-perf', 'low');
+          }
+        } catch (e) {}
+      })();
+    </script>
+
+    <script>
+      /*
        * Recuperación de documento cacheado.
        *
        * GitHub Pages sirve index.html con Cache-Control: max-age=600, pero en
@@ -30,7 +58,9 @@
        */
       (function () {
         var GUARD = 'detersur:recarga-por-cache';
-        var booted = false;
+        // Pasa a true solo si un bundle propio falló de verdad. Una conexión
+        // lenta no es un fallo: en 3G la app puede tardar 30 segundos.
+        var huboFallo = false;
 
         // Si venimos de una recarga de recuperación, sacamos el marcador de la
         // barra de direcciones para no dejar la URL sucia.
@@ -72,6 +102,7 @@
             // Solo nuestros propios bundles; las fuentes de Google que fallen
             // no justifican recargar.
             if (src.indexOf('/assets/') === -1) return;
+            huboFallo = true;
             recuperar();
           },
           true
@@ -82,21 +113,32 @@
         window.addEventListener('load', function () {
           setTimeout(function () {
             var root = document.getElementById('root');
-            booted = !!(root && root.children.length);
-            if (booted) {
+            if (root && root.children.length) {
               try { sessionStorage.removeItem(GUARD); } catch (e) {}
             }
           }, 1200);
         });
 
-        // Último recurso: si a los 8 segundos no montó nada y ya gastamos la
-        // recarga, mostramos un aviso en vez de una pantalla vacía.
-        setTimeout(function () {
+        function montada() {
           var root = document.getElementById('root');
-          if (root && root.children.length) return;
-          var fallback = document.getElementById('arranque');
-          if (fallback) fallback.setAttribute('data-estado', 'error');
-        }, 8000);
+          return !!(root && root.children.length);
+        }
+        function estado(valor) {
+          var el = document.getElementById('arranque');
+          if (el && !montada()) el.setAttribute('data-estado', valor);
+        }
+
+        // Un asset que falló y ya gastó su recarga: eso sí es un error.
+        setTimeout(function () {
+          if (huboFallo) estado('error');
+        }, 9000);
+
+        // Sin fallos pero tarda mucho: avisamos que va lento y ofrecemos
+        // recargar, sin afirmar que se rompió. En 3G lento montar puede
+        // llevar medio minuto.
+        setTimeout(function () {
+          if (!huboFallo) estado('lento');
+        }, 22000);
       })();
     </script>
 
@@ -132,10 +174,15 @@
         color: #404850;
       }
       #arranque .error,
-      #arranque[data-estado='error'] .cargando {
+      #arranque .lento {
         display: none;
       }
-      #arranque[data-estado='error'] .error {
+      #arranque[data-estado='error'] .cargando,
+      #arranque[data-estado='lento'] .cargando {
+        display: none;
+      }
+      #arranque[data-estado='error'] .error,
+      #arranque[data-estado='lento'] .lento {
         display: block;
       }
       #arranque[data-estado='error'] .punto {
@@ -168,6 +215,10 @@
       <p class="error">
         No pudimos cargar la tienda.<br />
         Probá <a href="javascript:location.reload()">recargar la página</a>.
+      </p>
+      <p class="lento">
+        Está tardando más de lo normal.<br />
+        Seguí esperando o <a href="javascript:location.reload()">recargá</a>.
       </p>
     </div>
 

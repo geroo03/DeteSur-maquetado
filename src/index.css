@@ -420,6 +420,58 @@
   transform: translateX(120%);
 }
 
+/* ------------------------------------------------------------------ */
+/* Equipos limitados: se apagan los efectos que cuestan memoria de GPU */
+/*                                                                     */
+/* index.html marca data-perf="low" en teléfonos y equipos con poca RAM */
+/* o pocos núcleos. Acá se cambia el vidrio esmerilado por fondos       */
+/* sólidos y se frenan las animaciones sobre capas borrosas, que son    */
+/* las que hacen que la pestaña se quede sin memoria y se reinicie.     */
+/* ------------------------------------------------------------------ */
+
+/* 1. Vidrio esmerilado -> fondo sólido translúcido (se ve casi igual,
+      cuesta una fracción). */
+[data-perf='low'] .glass-panel {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: rgba(255, 255, 255, 0.96);
+}
+[data-perf='low'] .glass-pill {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: rgba(255, 255, 255, 0.95);
+}
+/* Tailwind compone backdrop-filter desde --tw-backdrop-blur. Anular esa
+   variable es más fiable que pisar la propiedad: el minificador fusiona
+   `backdrop-filter` con su variante -webkit- y descarta una de las dos. */
+[data-perf='low'] [class*='backdrop-blur'] {
+  --tw-backdrop-blur: initial;
+}
+
+/* 2. Nada de animar capas borrosas: es la combinación más cara que hay. */
+[data-perf='low'] [class*='animate-drift'],
+[data-perf='low'] [class*='animate-float'],
+[data-perf='low'] [class*='animate-bob'],
+[data-perf='low'] [class*='animate-ripple'],
+[data-perf='low'] [class*='animate-pulse-ring'],
+[data-perf='low'] [class*='animate-spin-slow'] {
+  animation: none !important;
+}
+
+/* 3. Las partículas decorativas se ocultan: son muchas y no aportan nada
+      en una pantalla chica. */
+[data-perf='low'] [class*='animate-bubble'] {
+  display: none !important;
+}
+
+/* 4. Desenfoques grandes más chicos, y menos orbes de fondo. */
+[data-perf='low'] .blur-3xl {
+  --tw-blur: blur(26px);
+}
+[data-perf='low'] .ambient-bg > *:nth-child(n + 3) {
+  display: none;
+}
+
 /* Reduced motion: strip decorative motion, keep opacity transitions */
 @media (prefers-reduced-motion: reduce) {
   html {
