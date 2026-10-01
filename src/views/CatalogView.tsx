@@ -6,6 +6,7 @@ import { CategoryId, Product, SortKey, ViewMode } from '../types';
 import { ProductCard } from '../components/ProductCard';
 import { Reveal } from '../components/Reveal';
 import { Marquee } from '../components/Carousel';
+import { ChipRail } from '../components/ChipRail';
 import { useClickOutside, useDebounced } from '../hooks';
 import { formatPrice, normalize } from '../lib/format';
 
@@ -409,25 +410,12 @@ export const CatalogView: React.FC = () => {
           </div>
 
           {/* Row 2: category chips */}
-          <div className="flex items-center gap-space-xs overflow-x-auto no-scrollbar px-space-sm pb-0.5">
-            {CATEGORY_LABELS.map((category) => {
-              const active = filters.category === category.id;
-              return (
-                <button
-                  key={category.id}
-                  onClick={() => setFilter('category', category.id)}
-                  className={`shrink-0 px-space-md h-9 rounded-full font-label-md text-label-md font-bold flex items-center gap-1.5 transition-all duration-300 ${
-                    active
-                      ? 'bg-primary-container text-on-primary clay-button-primary scale-105'
-                      : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container'
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-[17px]">{category.icon}</span>
-                  {category.label}
-                </button>
-              );
-            })}
-          </div>
+          <ChipRail
+            label="Categorías"
+            items={CATEGORY_LABELS}
+            value={filters.category}
+            onChange={(id) => setFilter('category', id)}
+          />
 
           {/* Row 3: toggles + price */}
           <div className="flex flex-wrap items-center gap-space-sm px-space-sm">

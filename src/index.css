@@ -122,6 +122,7 @@
   --animate-pulse-ring: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   --animate-gradient-pan: gradient-pan 9s ease infinite;
   --animate-count-flip: count-flip 0.35s ease-out both;
+  --animate-chip-sheen: chip-sheen 0.75s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
 }
 
 /* ---------- Keyframes ---------- */
@@ -219,6 +220,11 @@
 @keyframes count-flip {
   from { opacity: 0; transform: translateY(-60%); }
   to { opacity: 1; transform: translateY(0); }
+}
+/* Specular highlight that crosses the selected chip once, left to right. */
+@keyframes chip-sheen {
+  from { transform: translateX(0); }
+  to { transform: translateX(400%); }
 }
 
 @layer base {
