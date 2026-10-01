@@ -6,6 +6,30 @@ export const LOGO_URL =
 export const LOGO_3D_URL =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuAhPd-BkBU-4W0YlAW9c2_5oW8-KoUODQ4Gn8ke4g6-0b0xUHFp4L_MAIUcOYyTmaq988um0oDGniPPi3XB-l6uWKPJ7FJhQgebcb0MAudLgi-qkxnPE6S2vzwLf5QEgvZ6FypAeuErwlvyu3fR7lwfbJAmSFpKn8r6LjGl4FOmCmUpBmqGb7XvhEeY7NaXL81EAXCLX4NFm8ugFVQ4yC5tYBoLuSxJ1STf2QIF-YPEXdl7GML8EX-Bsg';
 
+/* Product renders. Reused across the catalog as stand-ins per family. */
+const IMG_LAVANDINA =
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuCdZi-Bl2cExZBdQJ3vjryhix0GFwFYDD2CN8pIe19QKefYpac7wjmDZYFUzaRCENTGI9-CLxkRTcTC0KBpZl9MQMZoUbRAigmESYGe65tpU_Ylh6h0b78fsGTR5XtFCUcFmIOM1nG51YBPFGI8TTKq44EIMWg4GZQ_vc4vVUrTDG8lfSDleRYXRINFE0aZxalPozaDjNT3_Md6WjysH2yO9UTcwMvF-f3c8zX9lzp7hwCbzIJhsnVYmg';
+const IMG_JABON =
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuCFf1eGnK3htmUQn9m4L8rz84LMMkJt2EwiUT9Mq3WzkSGKT4rQrfx_fguly6BK-6uSR_JVbzAg9ZQaGKYE3G3Crt-ac8XGd5WBkCsGq6rTP4-YQMSp9xPYw3XVfTlHmJ0l0jfBeSX9hc4lAnYDioFIOAAMPNeeGBUHn3-nvwkjWwZNumcrZ-nX50FUIWWPQ_zPHDw0qupwW2fM7vKV90kXfmdULJMmOdSIc5alEZ_ftaYBffozUcJdHQ';
+const IMG_DESENGRASANTE =
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuCcHHbzEPiHonw61UiEtHVUnHqCexSXKp3SGR6l1Z0eB5HAvtrQNsZLK3Ew0HpO9M4IxGZ8Fv_8WxEsAMStM5Z75hG8q81g-K83ToDwwQDDe7FbQ-TsxjnUhqQT1OwpLXia_8dZpooqtKRpVnZ9niFmEFnz3-5demrtir3sVrPnTKitIxHdpSVlYI8HVG2vwmEVyCE0QH6E6JmNF0Q8GBAry1a1rgBqcJRgOcyx01qoUqACR2OjUDjDqg';
+const IMG_LUSTRA =
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuAaY-ErunhuBD95LxFKQQXqtFmRVzfTavYjRxb7TcTxleuj0mVAo3NeSCX1h9zRm8-VY8NXR9IwzsiXYqSYNKJsdlNYQizqIntmsJBUuS2PBUVuPb-_tal8ERZAKWQIEixQ16QWlcgbhNV-lvXzrxneVlohRxcztlf8p05vaBTtgR__nbQycEyhjBxkjTYoEdIGnjjur-4NlMW3AUAkwgoqWHCx-CKci3TPDT4UXISkJatX_YqpfMQ1bQ';
+const IMG_PASTILLAS =
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuA8o0QrYU9rxNWQ4mWmAoIau8lkEFZDPvog1pvA5xZ6VTuEXzkmScxbB-I90_lLUDvq8KDGkJvkWrmr2jpcgNevbEe0nzRn6speLSeaOFuXGkNaoPuupi1Qqq616YZrI8xXV6skvjV999gHkEYWnukg5Sqo4DRGad2aDJ1fupK4XoZKEdE_RLHOlo8IsNqQALDtK5w-LmylgQtCY-j5nwYPWtgAdN_3mjnZ36STz1bE_jc-nQdp7NXm-g';
+const IMG_CERA =
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuBtWEbNOYeSpjy-Y_5Slk1Ile1xcLWt-2BuNB6_a3Ff17yYwyieoAt3v-JpViM5lIl5gI_ds9WzIGp_YPF9gOq5xKONqZKAp10FEzBxlUwFiya8I1rFCDkZ0_Rzh2zDzXq4bxDQXMG2jTfOgIyQdqarsE9vhfgrUfORw0nbHG1ez8VVbBlnEwkhYrXM_bDNaDiLWxF-Y6H6uCuPekxHBY9Ab15B1ZQFi1nOlgg4j8yyBxRyz6AGPGOryw';
+const IMG_DETERGENTE =
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuAeYxO94lWG6Sr1RTKxzRVVR5qYCo798AQGi-gkOd6sDsc_Yra5ZM03Q4FtJTCTEBuWdQh3sMmN1sciLKlQhYezDQa882aSCjoPOtwUeGHWyWmxvqIdctK2UJPOYlv-79lXSlcgEyQ1XKrJB9lR94-tUGNNBx6lM521a66jXIjFtWmTs1Zbkpu0oG8dMMgvNVif2netYP8jr5ah08G_s13gu4EhBYYR1XD1X9zpVAO01wiRhlL2Nm7wag';
+const IMG_PAPEL =
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuBLTEizmsfTrzryp-ATYUUnfQ2Q5GQOq0W9r3cEEq1JwaG3-7Due14-Qk-rWKw3VmB9NYpRXJ0akILYIvl_YSSGqjhamygl6hJQ2jFPcW423LBIfrsvANKW-RwIZcHV_Ye25oC03iLkk3zoEkAGq6B5M7N2b75weFfV-fr8aDul4D1HZDF3g_1Vr1NZ88TpRSWcJbvcuCpxE2_vgwnESOQ0Gy5R8-M7q4ydjPXfYqp3gNxExB-sSGi25w';
+const IMG_VIDRIOS =
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuBjlGEOgQSNvJoyPFtXwT-nqpwI6JrhdN1NSWw7N3CiL7dDiRlhXJ3k1rnfiOzBPlECOMUxrWdofD0Faa9-dBFPv5HBL6ZFKO43Wx9sXvNqn9MALpMVCoVei0lZd_mSBEHbirmzqoflQ8TB_2ah7jrUSDgUVWT_GI-kCGDsMr2TRsoYrXNqu6vprin-GHFB8XEjkwlC-Bnb5vVvQ3cANuqroSeC9PbdAi8sYmiHgdwXbOWZoR38TxoWfw';
+const IMG_MOPA =
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuDDELkV0UolVBv5TlxQElvnpIeUdGPcQNOITcVz4ZJRhys2B-kaXBWexc8dv5vm5rKWL4CLl_8pGbM6-N8GNZJ2YfG-Z3NSuFFENon8hjlj-EpzrpB-ALVPZcLl-OAg6XzX6xWf1zINeIYk0hw2EPFPRGWO2pMpIzBTtvcPmUyw6PGIAl6Co9lybo616-NnW_c0f8LSkJT3IemNSG7cgwpntycZDZiorTU8DYu_PwEma_mTU3haTOknKA';
+const IMG_GUANTES =
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuCUQyQiiQqajWecFsdQX-XKlPghuETI0JTLesuoDZhQOuGz2iapmXA_pq1ryxXbxk4M3x_uIJj4zwwF2wRRdTBEG9YpYrVGeS6IjRBph1bQB7oF9JYmj30Dx4X1BzGKSNTJtf-QdP0pQSLtF5vhzw8WxtzQfsgYCby1bVLJIaIggGlAkr_gox09TeuxKiEpvsH2ZwnrgnsVfwZwZiMHKrG-ubmQMD5QkDuMVQUNadQWJpnO6JYws9p-lQ';
+
 export const PRODUCTS: Product[] = [
   {
     id: 'lavandina-55g',
@@ -13,57 +37,42 @@ export const PRODUCTS: Product[] = [
     brand: 'Detersur',
     category: 'sueltos',
     price: 3450,
+    listPrice: 4300,
     packageType: 'Bidón x 5 Litros',
     badge: 'Química Suelta',
     description:
       'Fórmula de alta densidad y acción bactericida inmediata. Apta desinfección de aguas, superficies comerciales, gastronómicas y uso doméstico intensivo.',
     details: 'Desinfección profunda sin aroma residual agresivo.',
     isBulk: true,
-    dilution: '100ml en 10L de agua',
+    dilution: '100 ml en 10 L de agua',
     density: '1.09 g/cm³',
+    ph: '12.5 - 13.0',
     origin: 'Cloro Virgen',
     rating: 4.9,
     reviewsCount: 128,
     salesCount: '+1.450 bidones este mes',
     sku: 'DET-LAV-55G5L',
     rnpa: '0254129',
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuCdZi-Bl2cExZBdQJ3vjryhix0GFwFYDD2CN8pIe19QKefYpac7wjmDZYFUzaRCENTGI9-CLxkRTcTC0KBpZl9MQMZoUbRAigmESYGe65tpU_Ylh6h0b78fsGTR5XtFCUcFmIOM1nG51YBPFGI8TTKq44EIMWg4GZQ_vc4vVUrTDG8lfSDleRYXRINFE0aZxalPozaDjNT3_Md6WjysH2yO9UTcwMvF-f3c8zX9lzp7hwCbzIJhsnVYmg',
+    stock: 184,
+    tags: ['Más vendido', 'Bactericida', 'Recargable'],
+    usage: [
+      'Desinfección de pisos, baños y superficies de contacto',
+      'Potabilización de tanques y reservas de agua',
+      'Blanqueo de ropa blanca resistente al cloro',
+      'Cocinas industriales y mesadas gastronómicas',
+    ],
+    image: IMG_LAVANDINA,
+    gallery: [IMG_LAVANDINA, IMG_DETERGENTE, IMG_JABON],
     presentations: [
-      {
-        id: '1L',
-        title: '1 Litro (Botellón)',
-        volume: '1L',
-        price: 850,
-        unitPrice: 850,
-        badge: 'Envase virgen PEAD',
-      },
-      {
-        id: '5L',
-        title: '5 Litros (Bidón c/ manija)',
-        volume: '5L',
-        price: 3450,
-        unitPrice: 690,
-        badge: 'Más Elegido',
-        isPopular: true,
-      },
-      {
-        id: '10L',
-        title: '10 Litros Reforzado',
-        volume: '10L',
-        price: 6500,
-        unitPrice: 650,
-        badge: 'Tapa precinto de seguridad',
-      },
-      {
-        id: 'recarga-5L',
-        title: 'Recarga x 5L (Suelto)',
-        volume: '5L Suelto',
-        price: 2590,
-        unitPrice: 518,
-        badge: 'Súper Ahorro',
-        isEco: true,
-      },
+      { id: '1L', title: '1 Litro (Botellón)', volume: '1L', price: 850, unitPrice: 850, badge: 'Envase virgen PEAD', stock: 300 },
+      { id: '5L', title: '5 Litros (Bidón c/ manija)', volume: '5L', price: 3450, unitPrice: 690, badge: 'Más Elegido', isPopular: true, stock: 184 },
+      { id: '10L', title: '10 Litros Reforzado', volume: '10L', price: 6500, unitPrice: 650, badge: 'Tapa precinto de seguridad', stock: 72 },
+      { id: 'recarga-5L', title: 'Recarga x 5L (traé tu envase)', volume: '5L Suelto', price: 2590, unitPrice: 518, badge: 'Súper Ahorro', isEco: true, stock: 500 },
+    ],
+    reviews: [
+      { id: 'r1', author: 'Marcela Ferreyra', initials: 'MF', rating: 5, date: 'Hace 3 días', title: 'Rinde muchísimo más que la de súper', body: 'Compro el bidón de 5L desde hace un año para el restaurante. Con 100 ml por balde queda impecable y no tiene ese olor que marea. El precio por litro no lo igual nadie en la zona.', verified: true, helpful: 24 },
+      { id: 'r2', author: 'Diego Sosa', initials: 'DS', rating: 5, date: 'Hace 1 semana', title: 'La recarga es un ahorro real', body: 'Llevé mi bidón viejo y pagué casi un 30% menos. Misma densidad, mismo resultado. Ya es mi compra fija del mes.', verified: true, helpful: 17 },
+      { id: 'r3', author: 'Laura Benítez', initials: 'LB', rating: 4, date: 'Hace 2 semanas', title: 'Muy buena, cuidado con la dilución', body: 'Es bastante más concentrada de lo que esperaba, la primera vez puse de más. Siguiendo la tabla de dilución anda perfecto.', verified: true, helpful: 9 },
     ],
   },
   {
@@ -72,35 +81,33 @@ export const PRODUCTS: Product[] = [
     brand: 'ROMYL',
     category: 'ropa',
     price: 5950,
+    listPrice: 7200,
     packageType: 'Bidón x 5 Litros',
     badge: 'Rinde 50 lavados',
     description:
-      'Jabón líquido para ropa baja espuma tipo Ariel. Enzimas de máxima remoción en agua fría con fragancia floral de larga duración.',
+      'Jabón líquido para ropa baja espuma apto lavarropas automáticos. Enzimas de máxima remoción en agua fría con fragancia floral de larga duración.',
     details: 'Ropa blanca y color en lavarropas automáticos.',
     isBulk: true,
-    dilution: '100ml por carga de lavado',
+    dilution: '100 ml por carga de lavado',
+    ph: '8.0 - 8.5',
     rating: 4.8,
     reviewsCount: 94,
     salesCount: '+980 bidones este mes',
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuCFf1eGnK3htmUQn9m4L8rz84LMMkJt2EwiUT9Mq3WzkSGKT4rQrfx_fguly6BK-6uSR_JVbzAg9ZQaGKYE3G3Crt-ac8XGd5WBkCsGq6rTP4-YQMSp9xPYw3XVfTlHmJ0l0jfBeSX9hc4lAnYDioFIOAAMPNeeGBUHn3-nvwkjWwZNumcrZ-nX50FUIWWPQ_zPHDw0qupwW2fM7vKV90kXfmdULJMmOdSIc5alEZ_ftaYBffozUcJdHQ',
+    sku: 'ROM-JAB-MAT5L',
+    rnpa: '0254877',
+    stock: 96,
+    tags: ['Baja espuma', 'Agua fría', 'Enzimático'],
+    usage: ['Lavarropas automáticos de carga frontal y superior', 'Prelavado de prendas con manchas orgánicas', 'Lavaderos industriales y de amenities'],
+    image: IMG_JABON,
+    gallery: [IMG_JABON, IMG_LAVANDINA],
     presentations: [
-      {
-        id: '5L',
-        title: 'Bidón x 5 Litros',
-        volume: '5L',
-        price: 5950,
-        unitPrice: 1190,
-        isPopular: true,
-      },
-      {
-        id: 'recarga-5L',
-        title: 'Recarga x 5L Suelto',
-        volume: '5L Suelto',
-        price: 4600,
-        unitPrice: 920,
-        isEco: true,
-      },
+      { id: '5L', title: 'Bidón x 5 Litros', volume: '5L', price: 5950, unitPrice: 1190, isPopular: true, stock: 96 },
+      { id: 'recarga-5L', title: 'Recarga x 5L Suelto', volume: '5L Suelto', price: 4600, unitPrice: 920, isEco: true, stock: 210 },
+      { id: '20L', title: 'Bidón Industrial x 20L', volume: '20L', price: 20900, unitPrice: 1045, badge: 'Lavaderos', stock: 18 },
+    ],
+    reviews: [
+      { id: 'r1', author: 'Verónica Ruiz', initials: 'VR', rating: 5, date: 'Hace 5 días', title: 'Perfecto para lavarropas', body: 'No hace espuma de más y la ropa sale con un perfume suave que dura. Un bidón me durá casi dos meses para una familia de cuatro.', verified: true, helpful: 31 },
+      { id: 'r2', author: 'Lavadero El Trébol', initials: 'LT', rating: 5, date: 'Hace 3 semanas', title: 'Lo usamos en el lavadero', body: 'Compramos el de 20L. Remoción muy buena en agua fría, que es lo que nos importa por el costo de calefacción.', verified: true, helpful: 12 },
     ],
   },
   {
@@ -109,33 +116,29 @@ export const PRODUCTS: Product[] = [
     brand: 'XPER',
     category: 'cocina',
     price: 2180,
+    listPrice: 2750,
     packageType: 'Gatillo 750 ml',
     badge: 'Antigrasa',
     description:
       'Poder disolvente activo de aceites y grasas pesadas para hornos, extractores y planchas gastronómicas en 60 segundos.',
     details: 'Fórmula alcalina de acción rápida.',
     isBulk: false,
+    ph: '11.5',
     rating: 4.9,
     reviewsCount: 76,
     salesCount: '+640 unidades este mes',
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuCcHHbzEPiHonw61UiEtHVUnHqCexSXKp3SGR6l1Z0eB5HAvtrQNsZLK3Ew0HpO9M4IxGZ8Fv_8WxEsAMStM5Z75hG8q81g-K83ToDwwQDDe7FbQ-TsxjnUhqQT1OwpLXia_8dZpooqtKRpVnZ9niFmEFnz3-5demrtir3sVrPnTKitIxHdpSVlYI8HVG2vwmEVyCE0QH6E6JmNF0Q8GBAry1a1rgBqcJRgOcyx01qoUqACR2OjUDjDqg',
+    sku: 'XPE-DES-750',
+    stock: 142,
+    tags: ['Acción 60 seg', 'Gastronómico'],
+    usage: ['Hornos, planchas y freidoras', 'Campanas y filtros de extracción', 'Azulejos y mesadas de acero inoxidable'],
+    image: IMG_DESENGRASANTE,
+    gallery: [IMG_DESENGRASANTE, IMG_VIDRIOS],
     presentations: [
-      {
-        id: '750ml',
-        title: 'Gatillo Pulverizador 750 ml',
-        volume: '750ml',
-        price: 2180,
-        unitPrice: 2906,
-        isPopular: true,
-      },
-      {
-        id: 'bidon-5L',
-        title: 'Bidón Recarga 5L',
-        volume: '5L',
-        price: 8900,
-        unitPrice: 1780,
-      },
+      { id: '750ml', title: 'Gatillo Pulverizador 750 ml', volume: '750ml', price: 2180, unitPrice: 2906, isPopular: true, stock: 142 },
+      { id: 'bidon-5L', title: 'Bidón Recarga 5L', volume: '5L', price: 8900, unitPrice: 1780, isEco: true, stock: 54 },
+    ],
+    reviews: [
+      { id: 'r1', author: 'Parrilla Don Nico', initials: 'DN', rating: 5, date: 'Hace 1 semana', title: 'Saca grasa quemada', body: 'Probamos de todo para la plancha y este es el único que levanta la grasa carbonizada sin tener que rascar media hora.', verified: true, helpful: 28 },
     ],
   },
   {
@@ -146,14 +149,16 @@ export const PRODUCTS: Product[] = [
     price: 3120,
     packageType: 'Aerosol 360 cm³',
     badge: 'Original',
-    description:
-      'Brillo instantáneo y protección antiestática contra el polvo para maderas tratadas, fórmicas y cuero.',
+    description: 'Brillo instantáneo y protección antiestática contra el polvo para maderas tratadas, fórmicas y cuero.',
     details: 'Aroma fresco lavanda.',
     isBulk: false,
     rating: 4.7,
     reviewsCount: 52,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuAaY-ErunhuBD95LxFKQQXqtFmRVzfTavYjRxb7TcTxleuj0mVAo3NeSCX1h9zRm8-VY8NXR9IwzsiXYqSYNKJsdlNYQizqIntmsJBUuS2PBUVuPb-_tal8ERZAKWQIEixQ16QWlcgbhNV-lvXzrxneVlohRxcztlf8p05vaBTtgR__nbQycEyhjBxkjTYoEdIGnjjur-4NlMW3AUAkwgoqWHCx-CKci3TPDT4UXISkJatX_YqpfMQ1bQ',
+    sku: 'BLE-LUS-360',
+    stock: 67,
+    tags: ['Antiestático'],
+    usage: ['Muebles de madera tratada', 'Fórmicas y laminados', 'Tapizados de cuero'],
+    image: IMG_LUSTRA,
   },
   {
     id: 'pastillas-cloro-aquamar',
@@ -161,6 +166,7 @@ export const PRODUCTS: Product[] = [
     brand: 'AQUAMAR',
     category: 'piscinas',
     price: 11400,
+    listPrice: 13900,
     packageType: 'Pote x 1 Kg (5 past.)',
     badge: 'Verano / Piscinas',
     description:
@@ -169,8 +175,16 @@ export const PRODUCTS: Product[] = [
     isBulk: true,
     rating: 4.9,
     reviewsCount: 88,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuA8o0QrYU9rxNWQ4mWmAoIau8lkEFZDPvog1pvA5xZ6VTuEXzkmScxbB-I90_lLUDvq8KDGkJvkWrmr2jpcgNevbEe0nzRn6speLSeaOFuXGkNaoPuupi1Qqq616YZrI8xXV6skvjV999gHkEYWnukg5Sqo4DRGad2aDJ1fupK4XoZKEdE_RLHOlo8IsNqQALDtK5w-LmylgQtCY-j5nwYPWtgAdN_3mjnZ36STz1bE_jc-nQdp7NXm-g',
+    sku: 'AQU-PAS-1K',
+    stock: 44,
+    tags: ['Triple acción', 'Disolución lenta'],
+    usage: ['Piscinas de lona y fibra', 'Piletas de material con filtro', 'Dosificadores flotantes y skimmers'],
+    image: IMG_PASTILLAS,
+    gallery: [IMG_PASTILLAS, IMG_LAVANDINA],
+    presentations: [
+      { id: '1kg', title: 'Pote x 1 Kg (5 pastillas)', volume: '1 Kg', price: 11400, unitPrice: 11400, isPopular: true, stock: 44 },
+      { id: '4kg', title: 'Balde x 4 Kg (20 pastillas)', volume: '4 Kg', price: 41900, unitPrice: 10475, badge: 'Temporada completa', stock: 16 },
+    ],
   },
   {
     id: 'cera-ceramicol',
@@ -186,8 +200,11 @@ export const PRODUCTS: Product[] = [
     isBulk: false,
     rating: 4.8,
     reviewsCount: 63,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuBtWEbNOYeSpjy-Y_5Slk1Ile1xcLWt-2BuNB6_a3Ff17yYwyieoAt3v-JpViM5lIl5gI_ds9WzIGp_YPF9gOq5xKONqZKAp10FEzBxlUwFiya8I1rFCDkZ0_Rzh2zDzXq4bxDQXMG2jTfOgIyQdqarsE9vhfgrUfORw0nbHG1ez8VVbBlnEwkhYrXM_bDNaDiLWxF-Y6H6uCuPekxHBY9Ab15B1ZQFi1nOlgg4j8yyBxRyz6AGPGOryw',
+    sku: 'CER-CER-1L',
+    stock: 88,
+    tags: ['Antideslizante'],
+    usage: ['Mosaicos calcáreos y graníticos', 'Cerámicos de alto tránsito', 'Madera sellada'],
+    image: IMG_CERA,
   },
   {
     id: 'detergente-sina-concentrado',
@@ -195,16 +212,26 @@ export const PRODUCTS: Product[] = [
     brand: 'SINA',
     category: 'sueltos',
     price: 4890,
+    listPrice: 5900,
     packageType: 'Botellón x 5 Litros',
     badge: 'Alto rendimiento',
     description:
       'Detergente lavavajillas neutro con 20% de materia activa. Espuma densa de prolongado poder desengrasante suave con la piel.',
     details: 'Rinde más de 200 lavados comerciales.',
     isBulk: true,
+    dilution: '20 ml por bacha de 10 L',
+    ph: '6.5 - 7.5',
     rating: 4.8,
     reviewsCount: 47,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuAeYxO94lWG6Sr1RTKxzRVVR5qYCo798AQGi-gkOd6sDsc_Yra5ZM03Q4FtJTCTEBuWdQh3sMmN1sciLKlQhYezDQa882aSCjoPOtwUeGHWyWmxvqIdctK2UJPOYlv-79lXSlcgEyQ1XKrJB9lR94-tUGNNBx6lM521a66jXIjFtWmTs1Zbkpu0oG8dMMgvNVif2netYP8jr5ah08G_s13gu4EhBYYR1XD1X9zpVAO01wiRhlL2Nm7wag',
+    sku: 'SIN-DET-5L',
+    stock: 110,
+    tags: ['20% activo', 'pH neutro', 'Recargable'],
+    usage: ['Lavado manual de vajilla', 'Bachas gastronómicas', 'Limpieza general de superficies'],
+    image: IMG_DETERGENTE,
+    presentations: [
+      { id: '5L', title: 'Botellón x 5 Litros', volume: '5L', price: 4890, unitPrice: 978, isPopular: true, stock: 110 },
+      { id: 'recarga-5L', title: 'Recarga x 5L Suelto', volume: '5L Suelto', price: 3790, unitPrice: 758, isEco: true, stock: 240 },
+    ],
   },
   {
     id: 'papel-higienico-institucional',
@@ -220,8 +247,11 @@ export const PRODUCTS: Product[] = [
     isBulk: true,
     rating: 4.7,
     reviewsCount: 39,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuBLTEizmsfTrzryp-ATYUUnfQ2Q5GQOq0W9r3cEEq1JwaG3-7Due14-Qk-rWKw3VmB9NYpRXJ0akILYIvl_YSSGqjhamygl6hJQ2jFPcW423LBIfrsvANKW-RwIZcHV_Ye25oC03iLkk3zoEkAGq6B5M7N2b75weFfV-fr8aDul4D1HZDF3g_1Vr1NZ88TpRSWcJbvcuCpxE2_vgwnESOQ0Gy5R8-M7q4ydjPXfYqp3gNxExB-sSGi25w',
+    sku: 'DEP-PHI-300',
+    stock: 130,
+    tags: ['Institucional', 'Fibra virgen'],
+    usage: ['Dispensers de rollo gigante', 'Oficinas y edificios', 'Escuelas y gimnasios'],
+    image: IMG_PAPEL,
   },
   {
     id: 'limpiavidrios-romyl',
@@ -237,8 +267,11 @@ export const PRODUCTS: Product[] = [
     isBulk: false,
     rating: 4.6,
     reviewsCount: 31,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuBjlGEOgQSNvJoyPFtXwT-nqpwI6JrhdN1NSWw7N3CiL7dDiRlhXJ3k1rnfiOzBPlECOMUxrWdofD0Faa9-dBFPv5HBL6ZFKO43Wx9sXvNqn9MALpMVCoVei0lZd_mSBEHbirmzqoflQ8TB_2ah7jrUSDgUVWT_GI-kCGDsMr2TRsoYrXNqu6vprin-GHFB8XEjkwlC-Bnb5vVvQ3cANuqroSeC9PbdAi8sYmiHgdwXbOWZoR38TxoWfw',
+    sku: 'ROM-VID-500',
+    stock: 215,
+    tags: ['Sin vetas', 'Bioalcohol'],
+    usage: ['Vidrios y ventanales', 'Espejos de baño', 'Pantallas de acrílico'],
+    image: IMG_VIDRIOS,
   },
   {
     id: 'mopa-giratoria-detersur',
@@ -246,6 +279,7 @@ export const PRODUCTS: Product[] = [
     brand: 'Detersur Pro',
     category: 'accesorios',
     price: 24990,
+    listPrice: 32900,
     packageType: 'Set + 2 Repuestos',
     badge: 'Oferta destacada',
     description:
@@ -254,8 +288,12 @@ export const PRODUCTS: Product[] = [
     isBulk: false,
     rating: 4.9,
     reviewsCount: 154,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuDDELkV0UolVBv5TlxQElvnpIeUdGPcQNOITcVz4ZJRhys2B-kaXBWexc8dv5vm5rKWL4CLl_8pGbM6-N8GNZJ2YfG-Z3NSuFFENon8hjlj-EpzrpB-ALVPZcLl-OAg6XzX6xWf1zINeIYk0hw2EPFPRGWO2pMpIzBTtvcPmUyw6PGIAl6Co9lybo616-NnW_c0f8LSkJT3IemNSG7cgwpntycZDZiorTU8DYu_PwEma_mTU3haTOknKA',
+    sku: 'DPR-MOP-360',
+    stock: 23,
+    tags: ['Set completo', 'Acero inoxidable'],
+    usage: ['Pisos de alto tránsito', 'Superficies grandes sin lustradora', 'Limpieza húmeda y seca'],
+    image: IMG_MOPA,
+    gallery: [IMG_MOPA, IMG_GUANTES],
   },
   {
     id: 'guantes-latex-reforzados',
@@ -271,7 +309,349 @@ export const PRODUCTS: Product[] = [
     isBulk: false,
     rating: 4.8,
     reviewsCount: 82,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuCUQyQiiQqajWecFsdQX-XKlPghuETI0JTLesuoDZhQOuGz2iapmXA_pq1ryxXbxk4M3x_uIJj4zwwF2wRRdTBEG9YpYrVGeS6IjRBph1bQB7oF9JYmj30Dx4X1BzGKSNTJtf-QdP0pQSLtF5vhzw8WxtzQfsgYCby1bVLJIaIggGlAkr_gox09TeuxKiEpvsH2ZwnrgnsVfwZwZiMHKrG-ubmQMD5QkDuMVQUNadQWJpnO6JYws9p-lQ',
+    sku: 'DPR-GUA-LAT',
+    stock: 340,
+    tags: ['Antialérgico', 'Antideslizante'],
+    usage: ['Manipulación de químicos concentrados', 'Limpieza general del hogar', 'Uso gastronómico'],
+    image: IMG_GUANTES,
+    presentations: [
+      { id: 'S', title: 'Talle S (Chico)', volume: 'S', price: 1150, unitPrice: 1150, stock: 110 },
+      { id: 'M', title: 'Talle M (Mediano)', volume: 'M', price: 1150, unitPrice: 1150, isPopular: true, stock: 150 },
+      { id: 'L', title: 'Talle L (Grande)', volume: 'L', price: 1150, unitPrice: 1150, stock: 80 },
+    ],
+  },
+  {
+    id: 'desodorante-pisos-lavanda',
+    name: 'Desodorante de Pisos Lavanda Silvestre',
+    brand: 'Detersur',
+    category: 'pisos',
+    price: 2250,
+    listPrice: 2900,
+    packageType: 'Bidón x 5 Litros',
+    badge: 'Química Suelta',
+    description:
+      'Limpiador perfumador de pisos con fijador de fragancia de larga permanencia. Deja una película invisible que repele el polvo.',
+    details: 'Aroma que perdura más de 12 horas.',
+    isBulk: true,
+    dilution: '150 ml en 10 L de agua',
+    ph: '7.0',
+    rating: 4.8,
+    reviewsCount: 71,
+    salesCount: '+820 bidones este mes',
+    sku: 'DET-DES-LAV5L',
+    stock: 156,
+    tags: ['Fragancia 12h', 'Recargable', 'Más vendido'],
+    usage: ['Pisos cerámicos y porcelanato', 'Pasillos y palieres de consorcio', 'Locales comerciales'],
+    image: IMG_CERA,
+    presentations: [
+      { id: '5L', title: 'Bidón x 5 Litros', volume: '5L', price: 2250, unitPrice: 450, isPopular: true, stock: 156 },
+      { id: 'recarga-5L', title: 'Recarga x 5L Suelto', volume: '5L Suelto', price: 1690, unitPrice: 338, isEco: true, stock: 320 },
+      { id: '20L', title: 'Bidón x 20 Litros', volume: '20L', price: 7900, unitPrice: 395, badge: 'Consorcios', stock: 28 },
+    ],
+  },
+  {
+    id: 'limpiador-amonio-cuaternario',
+    name: 'Desinfectante Amonio Cuaternario 5ª Generación',
+    brand: 'Detersur',
+    category: 'sueltos',
+    price: 6900,
+    packageType: 'Bidón x 5 Litros',
+    badge: 'Grado Sanitario',
+    description:
+      'Bactericida, fungicida y virucida de amplio espectro sin enjuague. Aprobado para áreas sanitarias, geriátricos y food service.',
+    details: 'Eficacia comprobada sobre 99,99% de patógenos.',
+    isBulk: true,
+    isNew: true,
+    dilution: '30 ml en 5 L de agua',
+    ph: '7.5 - 8.5',
+    rating: 5,
+    reviewsCount: 36,
+    sku: 'DET-AMO-Q5L',
+    rnpa: '0261344',
+    stock: 62,
+    tags: ['Nuevo', 'Virucida', 'Sin enjuague'],
+    usage: ['Clínicas, consultorios y geriátricos', 'Superficies de contacto en gastronomía', 'Guarderías y colegios'],
+    image: IMG_DETERGENTE,
+    presentations: [
+      { id: '5L', title: 'Bidón x 5 Litros', volume: '5L', price: 6900, unitPrice: 1380, isPopular: true, stock: 62 },
+      { id: '1L', title: 'Botella x 1 Litro', volume: '1L', price: 1690, unitPrice: 1690, stock: 140 },
+    ],
+  },
+  {
+    id: 'limpiador-antisarro-bano',
+    name: 'Antisarro Gel Baño Acción Profunda',
+    brand: 'XPER',
+    category: 'bano',
+    price: 2680,
+    listPrice: 3400,
+    packageType: 'Botella Gel 1 Litro',
+    badge: 'Disuelve sarro',
+    description:
+      'Gel ácido adherente que disuelve sarro, óxido y restos de jabón en inodoros, mingitorios y griferías sin dañar el esmalte.',
+    details: 'Fórmula de alta viscosidad que no chorrea.',
+    isBulk: false,
+    ph: '1.5',
+    rating: 4.7,
+    reviewsCount: 58,
+    sku: 'XPE-ANT-1L',
+    stock: 97,
+    tags: ['Gel adherente'],
+    usage: ['Inodoros y mingitorios', 'Griferías con sarro calcáreo', 'Mamparas y azulejos'],
+    image: IMG_VIDRIOS,
+  },
+  {
+    id: 'jabon-liquido-manos-nacarado',
+    name: 'Jabón Líquido para Manos Nacarado Cremoso',
+    brand: 'Detersur',
+    category: 'bano',
+    price: 3980,
+    packageType: 'Bidón x 5 Litros',
+    badge: 'Química Suelta',
+    description:
+      'Jabón de manos nacarado con glicerina y pantenol. Espuma cremosa de enjuague rápido apta dispensers de pared.',
+    details: 'Dermatológicamente testeado, pH neutro.',
+    isBulk: true,
+    ph: '5.5',
+    rating: 4.8,
+    reviewsCount: 64,
+    sku: 'DET-JAB-MAN5L',
+    stock: 121,
+    tags: ['Con glicerina', 'Recargable', 'pH 5.5'],
+    usage: ['Dispensers de baño institucional', 'Oficinas y consorcios', 'Uso doméstico por recarga'],
+    image: IMG_JABON,
+    presentations: [
+      { id: '5L', title: 'Bidón x 5 Litros', volume: '5L', price: 3980, unitPrice: 796, isPopular: true, stock: 121 },
+      { id: 'recarga-5L', title: 'Recarga x 5L Suelto', volume: '5L Suelto', price: 2980, unitPrice: 596, isEco: true, stock: 260 },
+    ],
+  },
+  {
+    id: 'suavizante-textil-concentrado',
+    name: 'Suavizante Textil Concentrado Perlas de Algodón',
+    brand: 'ROMYL',
+    category: 'ropa',
+    price: 4300,
+    listPrice: 5400,
+    packageType: 'Bidón x 5 Litros',
+    badge: 'Concentrado 3x',
+    description:
+      'Suavizante de triple concentración con siliconas textiles que facilitan el planchado y reducen la electricidad estática.',
+    details: 'Un tapón rinde lo que tres de un suavizante común.',
+    isBulk: true,
+    dilution: '30 ml por carga de lavado',
+    rating: 4.7,
+    reviewsCount: 49,
+    sku: 'ROM-SUA-5L',
+    stock: 84,
+    tags: ['Concentrado 3x', 'Recargable'],
+    usage: ['Último enjuague en lavarropas', 'Lavaderos y hotelería', 'Ropa de bebé (doble enjuague)'],
+    image: IMG_JABON,
+    presentations: [
+      { id: '5L', title: 'Bidón x 5 Litros', volume: '5L', price: 4300, unitPrice: 860, isPopular: true, stock: 84 },
+      { id: 'recarga-5L', title: 'Recarga x 5L Suelto', volume: '5L Suelto', price: 3350, unitPrice: 670, isEco: true, stock: 190 },
+    ],
+  },
+  {
+    id: 'quitamanchas-oxigeno-activo',
+    name: 'Quitamanchas Oxígeno Activo sin Cloro',
+    brand: 'ROMYL',
+    category: 'ropa',
+    price: 3760,
+    packageType: 'Pote x 1 Kg',
+    badge: 'Apto color',
+    description:
+      'Polvo con percarbonato de sodio que libera oxígeno activo y remueve manchas orgánicas sin decolorar prendas de color.',
+    details: 'Vino, café, pasto, transpiración y maquillaje.',
+    isBulk: false,
+    isNew: true,
+    rating: 4.6,
+    reviewsCount: 27,
+    sku: 'ROM-QUI-1K',
+    stock: 73,
+    tags: ['Nuevo', 'Sin cloro', 'Apto color'],
+    usage: ['Prelavado por inmersión', 'Blanqueo de ropa de color', 'Limpieza de tapizados claros'],
+    image: IMG_PASTILLAS,
+  },
+  {
+    id: 'alguicida-piscina-concentrado',
+    name: 'Alguicida Concentrado de Mantenimiento',
+    brand: 'AQUAMAR',
+    category: 'piscinas',
+    price: 8900,
+    packageType: 'Bidón x 5 Litros',
+    badge: 'Agua cristalina',
+    description:
+      'Alguicida polimérico no espumante que previene la formación de algas verdes, negras y mostaza en todo tipo de piscina.',
+    details: 'Compatible con cloro y bromo.',
+    isBulk: true,
+    dilution: '1 L por cada 50.000 L de agua',
+    rating: 4.8,
+    reviewsCount: 41,
+    sku: 'AQU-ALG-5L',
+    stock: 37,
+    tags: ['No espumante'],
+    usage: ['Mantenimiento semanal de piscinas', 'Tratamiento de choque preventivo', 'Piletas de lona y fibra'],
+    image: IMG_LAVANDINA,
+  },
+  {
+    id: 'toallas-papel-intercalado',
+    name: 'Toallas de Papel Intercaladas Hoja Doble',
+    brand: 'Detersur Papeles',
+    category: 'papeleria',
+    price: 5400,
+    listPrice: 6500,
+    packageType: 'Caja x 2.400 paños',
+    badge: 'Mayorista',
+    description:
+      'Toallas intercaladas de hoja doble gofrada de alta absorción, aptas dispensers estándar de pared en baños de alto flujo.',
+    details: 'Celulosa virgen, sin blanqueadores ópticos.',
+    isBulk: true,
+    rating: 4.7,
+    reviewsCount: 33,
+    sku: 'DEP-TOA-2400',
+    stock: 58,
+    tags: ['Hoja doble', 'Institucional'],
+    usage: ['Dispensers de baño institucional', 'Cocinas industriales', 'Shoppings y oficinas'],
+    image: IMG_PAPEL,
+  },
+  {
+    id: 'bolsas-consorcio-reforzadas',
+    name: 'Bolsas de Consorcio Reforzadas 60x90',
+    brand: 'Detersur Pro',
+    category: 'papeleria',
+    price: 6200,
+    packageType: 'Bulto x 100 unidades',
+    badge: 'Consorcios',
+    description:
+      'Bolsas de polietileno virgen de 80 micrones con fuelle reforzado, resistentes a cargas pesadas y objetos punzantes.',
+    details: 'Color negro opaco, apto residuos húmedos.',
+    isBulk: true,
+    rating: 4.6,
+    reviewsCount: 44,
+    sku: 'DPR-BOL-6090',
+    stock: 92,
+    tags: ['80 micrones'],
+    usage: ['Consorcios y edificios', 'Obras y locales comerciales', 'Residuos húmedos y pesados'],
+    image: IMG_PAPEL,
+  },
+  {
+    id: 'difusor-aromatico-textil',
+    name: 'Aromatizante de Ambientes y Textiles Premium',
+    brand: 'SINA',
+    category: 'aromas',
+    price: 3480,
+    listPrice: 4300,
+    packageType: 'Bidón x 5 Litros',
+    badge: 'Fragancia Hotel',
+    description:
+      'Aromatizante en base acuosa con microencapsulado de fragancia que se activa al roce. Líneas Bamboo, Vainilla y Citrus Spa.',
+    details: 'No mancha telas ni deja residuo graso.',
+    isBulk: true,
+    isNew: true,
+    rating: 4.9,
+    reviewsCount: 52,
+    sku: 'SIN-ARO-5L',
+    stock: 68,
+    tags: ['Nuevo', 'Microencapsulado', 'Recargable'],
+    usage: ['Ambientación de locales y hotelería', 'Textiles, cortinas y alfombras', 'Autos y transportes'],
+    image: IMG_LUSTRA,
+    presentations: [
+      { id: '5L', title: 'Bidón x 5 Litros', volume: '5L', price: 3480, unitPrice: 696, isPopular: true, stock: 68 },
+      { id: '1L', title: 'Gatillo x 1 Litro', volume: '1L', price: 1290, unitPrice: 1290, stock: 180 },
+      { id: 'recarga-5L', title: 'Recarga x 5L Suelto', volume: '5L Suelto', price: 2690, unitPrice: 538, isEco: true, stock: 150 },
+    ],
+  },
+  {
+    id: 'escoba-cerda-suave-pro',
+    name: 'Escoba Profesional Cerda Suave + Cabo Aluminio',
+    brand: 'Detersur Pro',
+    category: 'accesorios',
+    price: 7890,
+    packageType: 'Unidad con cabo 140 cm',
+    badge: 'Uso intensivo',
+    description:
+      'Base de 30 cm con cerda sintética de alta densidad y cabo de aluminio anodizado con rosca metálica reforzada.',
+    details: 'No se deforma con el uso diario.',
+    isBulk: false,
+    rating: 4.8,
+    reviewsCount: 61,
+    sku: 'DPR-ESC-30',
+    stock: 46,
+    tags: ['Cabo aluminio'],
+    usage: ['Interiores de alto tránsito', 'Locales y depósitos', 'Barrido fino de polvo'],
+    image: IMG_MOPA,
+  },
+  {
+    id: 'dispenser-jabon-institucional',
+    name: 'Dispenser de Jabón Líquido ABS 1 Litro',
+    brand: 'Detersur Pro',
+    category: 'accesorios',
+    price: 12400,
+    listPrice: 15900,
+    packageType: 'Unidad con llave y soporte',
+    badge: 'Institucional',
+    description:
+      'Dispenser de pared en ABS blanco con depósito transparente de nivel visible, válvula antigoteo y cierre con llave.',
+    details: 'Incluye tarugos, tornillos y plantilla de montaje.',
+    isBulk: false,
+    rating: 4.7,
+    reviewsCount: 29,
+    sku: 'DPR-DIS-1L',
+    stock: 31,
+    tags: ['Antigoteo', 'Con llave'],
+    usage: ['Baños institucionales', 'Cocinas comerciales', 'Consorcios y oficinas'],
+    image: IMG_GUANTES,
+  },
+  {
+    id: 'insecticida-residual-profesional',
+    name: 'Insecticida Residual Profesional Inodoro',
+    brand: 'XPER',
+    category: 'sueltos',
+    price: 9700,
+    packageType: 'Bidón x 5 Litros',
+    badge: 'Grado Profesional',
+    description:
+      'Concentrado emulsionable de acción residual prolongada contra cucarachas, hormigas y arañas. Inodoro, no mancha superficies.',
+    details: 'Hasta 90 días de efecto residual.',
+    isBulk: true,
+    dilution: '50 ml en 5 L de agua',
+    rating: 4.8,
+    reviewsCount: 38,
+    sku: 'XPE-INS-5L',
+    rnpa: '0259011',
+    stock: 29,
+    tags: ['Residual 90 días', 'Inodoro'],
+    usage: ['Perímetros y zócalos', 'Depósitos y cocinas comerciales', 'Patios y jardines'],
+    image: IMG_DETERGENTE,
   },
 ];
+
+/** Products wired into the "Más vendidos" carousel, in display order. */
+export const BEST_SELLER_IDS = [
+  'lavandina-55g',
+  'jabon-liquido-matic',
+  'desodorante-pisos-lavanda',
+  'desengrasante-cocina-express',
+  'detergente-sina-concentrado',
+  'mopa-giratoria-detersur',
+  'jabon-liquido-manos-nacarado',
+  'pastillas-cloro-aquamar',
+];
+
+export const getProductById = (id: string): Product | undefined =>
+  PRODUCTS.find((p) => p.id === id);
+
+export const BEST_SELLERS: Product[] = BEST_SELLER_IDS
+  .map((id) => getProductById(id))
+  .filter((p): p is Product => Boolean(p));
+
+export const NEW_ARRIVALS: Product[] = PRODUCTS.filter((p) => p.isNew);
+
+export const ON_SALE: Product[] = PRODUCTS.filter(
+  (p) => typeof p.listPrice === 'number' && p.listPrice > p.price
+);
+
+export const REFILLABLE: Product[] = PRODUCTS.filter((p) =>
+  p.presentations?.some((pr) => pr.isEco)
+);
+
+export const BRANDS: string[] = Array.from(new Set(PRODUCTS.map((p) => p.brand))).sort();

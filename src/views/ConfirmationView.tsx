@@ -1,359 +1,635 @@
-import React, { useState } from 'react';
-import { useCart } from '../context/CartContext';
+import React, { useEffect, useState } from 'react';
+import { useStore } from '../context/StoreContext';
+import { CONTACT } from '../data/content';
+import { BEST_SELLERS, getProductById } from '../data/products';
+import { ProductCard } from '../components/ProductCard';
+import { ScrollCarousel } from '../components/Carousel';
+import { Reveal } from '../components/Reveal';
+import { useEscapeKey, useLockBodyScroll, usePrefersReducedMotion } from '../hooks';
+import { estimatedDelivery, formatPrice, formatPriceLong } from '../lib/format';
 
-export const ConfirmationView: React.FC = () => {
-  const { orderNumber, total, shippingAddress, navigateTo } = useCart();
-  const [activeStep, setActiveStep] = useState<number>(1); // 0: Recibido, 1: En preparación, 2: En camino, 3: Entregado
-  const [showInvoiceModal, setShowInvoiceModal] = useState<boolean>(false);
+const TRACKING_STEPS = [
+  {
+    id: 0,
+    label: 'Pedido recibido',
+    icon: 'receipt_long',
+    detail: 'Registramos tu compra y enviamos el comprobante por email.',
+  },
+  {
+    id: 1,
+    label: 'En preparación',
+    icon: 'inventory_2',
+    detail: 'Estamos fraccionando y embalando los bidones en planta.',
+  },
+  {
+    id: 2,
+    label: 'En camino',
+    icon: 'local_shipping',
+    detail: 'El pedido salió con nuestra flota propia hacia tu domicilio.',
+  },
+  {
+    id: 3,
+    label: 'Entregado',
+    icon: 'task_alt',
+    detail: 'Pedido entregado y conforme. ¡Gracias por elegirnos!',
+  },
+];
 
-  const steps = [
-    { label: 'Recibido', time: '14:15 hs', icon: 'done', sub: 'Confirmado' },
-    { label: 'En preparación', time: 'Sucursal Lanús', icon: 'science', sub: 'Fraccionando' },
-    { label: 'En camino', time: '16:30 hs aprox', icon: 'directions_car', sub: 'Fletero en ruta' },
-    { label: 'Entregado', time: 'Hasta 19:00 hs', icon: 'home_pin', sub: 'En puerta' },
-  ];
+/* ------------------------------------------------------------------ */
+/* Confetti burst                                                      */
+/* ------------------------------------------------------------------ */
+const Confetti: React.FC = () => {
+  const reduced = usePrefersReducedMotion();
+  if (reduced) return null;
+
+  const pieces = Array.from({ length: 28 }, (_, index) => index);
+  const colors = ['#0077b6', '#70f8e8', '#654f7e', '#94ccff', '#4fdbcc'];
 
   return (
-    <div className="flex flex-col w-full">
-      <div className="relative w-full max-w-4xl mx-auto py-space-md md:py-space-xl px-space-xs">
-        {/* Glow Effects */}
-        <div className="absolute -top-12 -left-8 w-44 h-44 rounded-full bg-secondary-fixed/40 blur-2xl pointer-events-none"></div>
-        <div className="absolute top-1/3 -right-16 w-56 h-56 rounded-full bg-primary-fixed/50 blur-3xl pointer-events-none"></div>
-        <div className="absolute -bottom-10 left-1/4 w-48 h-48 rounded-full bg-secondary-fixed-dim/30 blur-2xl pointer-events-none"></div>
+    <div aria-hidden="true" className="absolute inset-0 overflow-hidden pointer-events-none">
+      {pieces.map((piece) => {
+        const left = (piece * 37) % 100;
+        const delay = (piece % 7) * 0.14;
+        const size = 6 + (piece % 4) * 3;
+        return (
+          <span
+            key={piece}
+            className="absolute rounded-sm"
+            style={{
+              left: `${left}%`,
+              top: '-5%',
+              width: size,
+              height: size * 1.6,
+              background: colors[piece % colors.length],
+              animation: `confetti-fall 2.6s cubic-bezier(0.3,0.7,0.6,1) ${delay}s forwards`,
+            }}
+          />
+        );
+      })}
+      <style>{`@keyframes confetti-fall {
+        0% { transform: translate3d(0,0,0) rotate(0deg); opacity: 1; }
+        100% { transform: translate3d(calc(var(--drift, 20px)), 420px, 0) rotate(540deg); opacity: 0; }
+      }`}</style>
+    </div>
+  );
+};
 
-        {/* Card Stage */}
-        <div className="relative bg-surface-container-lowest rounded-3xl shadow-[0_24px_50px_-12px_rgba(0,119,182,0.16)] p-space-md sm:p-space-lg md:p-space-xl flex flex-col items-center text-center overflow-hidden border border-white">
-          <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-surface-container-low via-surface-container-lowest/60 to-transparent pointer-events-none"></div>
+/* ------------------------------------------------------------------ */
+/* Invoice modal                                                       */
+/* ------------------------------------------------------------------ */
+const InvoiceModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+  const { lastOrder } = useStore();
+  useLockBodyScroll(true);
+  useEscapeKey(onClose, true);
 
-          {/* Central 3D Check Bubble */}
-          <div className="relative mb-space-md">
-            <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-gradient-to-tr from-secondary-fixed via-secondary-fixed-dim to-primary-fixed-dim p-2 shadow-[0_20px_35px_-8px_rgba(0,113,104,0.32)] flex items-center justify-center">
-              <div className="w-full h-full rounded-full bg-gradient-to-br from-surface-container-lowest via-surface-container-low to-secondary-fixed/20 flex items-center justify-center relative shadow-[inset_0_4px_10px_rgba(255,255,255,0.95),inset_0_-4px_8px_rgba(0,106,98,0.12)]">
-                <span
-                  className="material-symbols-outlined text-secondary text-5xl sm:text-6xl drop-shadow-sm select-none"
-                  style={{ fontVariationSettings: "'FILL' 1, 'wght' 700" }}
+  if (!lastOrder) return null;
+
+  const { totals, address, invoiceType, orderNumber, placedAt } = lastOrder;
+
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-space-md">
+      <div
+        onClick={onClose}
+        className="absolute inset-0 bg-[#091b38]/55 backdrop-blur-sm animate-fade-in"
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Comprobante del pedido"
+        className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto pretty-scroll bg-white rounded-3xl shadow-[0_40px_80px_-20px_rgba(9,27,56,0.4)] animate-zoom-in"
+      >
+        <div className="p-space-lg border-b border-slate-200 flex items-start justify-between gap-space-md">
+          <div>
+            <p className="font-label-sm text-label-sm text-outline uppercase tracking-widest font-bold">
+              Factura {invoiceType}
+            </p>
+            <h3 className="font-headline-md text-headline-md text-primary font-extrabold">
+              Detersur Química Argentina
+            </h3>
+            <p className="font-label-sm text-label-sm text-on-surface-variant">
+              CUIT 30-71234567-8 · {CONTACT.address}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Cerrar comprobante"
+            className="w-9 h-9 rounded-full bg-surface-container-low text-on-surface flex items-center justify-center shrink-0 active:scale-90 transition-transform"
+          >
+            <span className="material-symbols-outlined text-[19px]">close</span>
+          </button>
+        </div>
+
+        <div className="p-space-lg space-y-space-md">
+          <div className="grid grid-cols-2 gap-space-sm font-label-md text-label-md">
+            <div>
+              <p className="text-outline">Comprobante</p>
+              <p className="text-on-surface font-bold">{orderNumber}</p>
+            </div>
+            <div>
+              <p className="text-outline">Fecha</p>
+              <p className="text-on-surface font-bold">
+                {new Date(placedAt).toLocaleDateString('es-AR')}
+              </p>
+            </div>
+            <div className="col-span-2">
+              <p className="text-outline">Cliente</p>
+              <p className="text-on-surface font-bold">
+                {address.businessName || address.fullName}
+              </p>
+              {address.cuit && (
+                <p className="text-on-surface-variant">CUIT {address.cuit}</p>
+              )}
+            </div>
+          </div>
+
+          <table className="w-full font-label-md text-label-md">
+            <tbody className="divide-y divide-slate-100">
+              {lastOrder.items.map((line) => {
+                const product = getProductById(line.productId);
+                if (!product) return null;
+                const presentation = product.presentations?.find(
+                  (p) => p.id === line.presentationId
+                );
+                const price = presentation?.price ?? product.price;
+                return (
+                  <tr key={`${line.productId}-${line.presentationId ?? ''}`}>
+                    <td className="py-2 text-on-surface">
+                      {product.name}
+                      {presentation && (
+                        <span className="text-outline"> · {presentation.volume}</span>
+                      )}
+                    </td>
+                    <td className="py-2 text-center text-on-surface-variant tabular-nums">
+                      ×{line.quantity}
+                    </td>
+                    <td className="py-2 text-right text-on-surface font-bold tabular-nums">
+                      {formatPrice(price * line.quantity)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+
+          <div className="pt-space-sm border-t border-slate-200 space-y-1 font-label-md text-label-md">
+            <div className="flex justify-between">
+              <span className="text-on-surface-variant">Subtotal</span>
+              <span className="font-bold tabular-nums">{formatPrice(totals.subtotal)}</span>
+            </div>
+            {totals.wholesaleDiscount > 0 && (
+              <div className="flex justify-between text-tertiary">
+                <span>Descuento mayorista</span>
+                <span className="tabular-nums">−{formatPrice(totals.wholesaleDiscount)}</span>
+              </div>
+            )}
+            {totals.canjeDiscount > 0 && (
+              <div className="flex justify-between text-secondary">
+                <span>Plan Canje envases</span>
+                <span className="tabular-nums">−{formatPrice(totals.canjeDiscount)}</span>
+              </div>
+            )}
+            {totals.paymentDiscount > 0 && (
+              <div className="flex justify-between text-secondary">
+                <span>Descuento por medio de pago</span>
+                <span className="tabular-nums">−{formatPrice(totals.paymentDiscount)}</span>
+              </div>
+            )}
+            <div className="flex justify-between">
+              <span className="text-on-surface-variant">Envío</span>
+              <span className="tabular-nums font-bold">
+                {totals.shippingCost === 0 ? 'Bonificado' : formatPrice(totals.shippingCost)}
+              </span>
+            </div>
+            {invoiceType === 'A' && (
+              <div className="flex justify-between text-on-surface-variant">
+                <span>IVA 21% contenido</span>
+                <span className="tabular-nums">{formatPrice(totals.taxIncluded)}</span>
+              </div>
+            )}
+            <div className="flex justify-between pt-space-sm border-t border-slate-200 font-headline-sm text-headline-sm">
+              <span className="font-extrabold">Total</span>
+              <span className="text-primary font-black tabular-nums">
+                {formatPriceLong(totals.total)}
+              </span>
+            </div>
+          </div>
+
+          <button
+            onClick={() => window.print()}
+            className="w-full py-3 rounded-full bg-primary-container text-on-primary font-label-lg text-label-lg font-bold clay-button-primary hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-space-xs"
+          >
+            <span className="material-symbols-outlined text-[19px]">print</span>
+            Imprimir o guardar PDF
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ------------------------------------------------------------------ */
+/* Confirmation                                                        */
+/* ------------------------------------------------------------------ */
+export const ConfirmationView: React.FC = () => {
+  const { lastOrder, navigate } = useStore();
+  const [activeStep, setActiveStep] = useState(0);
+  const [showInvoice, setShowInvoice] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  // Walk the tracker forward so the demo shows the animation without waiting.
+  useEffect(() => {
+    const timers = [
+      window.setTimeout(() => setActiveStep(1), 2600),
+      window.setTimeout(() => setActiveStep(2), 6200),
+    ];
+    return () => timers.forEach(window.clearTimeout);
+  }, []);
+
+  if (!lastOrder) {
+    return (
+      <div className="flex flex-col items-center text-center py-space-2xl gap-space-md">
+        <span className="material-symbols-outlined text-[72px] text-primary-fixed-dim animate-bob">
+          receipt_long
+        </span>
+        <h1 className="font-headline-lg text-2xl text-primary font-extrabold">
+          Todavía no hay pedidos confirmados
+        </h1>
+        <p className="font-body-md text-body-md text-on-surface-variant max-w-md">
+          Cuando completes una compra vas a ver acá el seguimiento y el comprobante.
+        </p>
+        <button
+          onClick={() => navigate({ view: 'catalog' })}
+          className="px-space-xl py-3.5 rounded-full bg-primary-container text-on-primary font-label-lg text-label-lg font-bold clay-button-primary hover:scale-105 active:scale-95 transition-all"
+        >
+          Empezar a comprar
+        </button>
+      </div>
+    );
+  }
+
+  const { orderNumber, totals, address, shippingMethod, paymentMethod, invoiceType, itemCount } =
+    lastOrder;
+
+  const copyOrderNumber = async () => {
+    try {
+      await navigator.clipboard.writeText(orderNumber);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* clipboard blocked — the number is visible on screen anyway */
+    }
+  };
+
+  return (
+    <div className="flex flex-col w-full gap-space-xl">
+      {/* Hero */}
+      <section className="relative rounded-3xl bg-gradient-to-br from-secondary-fixed/50 via-surface-container-lowest to-primary-fixed/40 p-space-lg md:p-space-xl clay-card border border-white overflow-hidden text-center">
+        <Confetti />
+
+        <div className="relative">
+          {/* Animated check */}
+          <div className="relative w-24 h-24 mx-auto flex items-center justify-center">
+            <span className="absolute inset-0 rounded-full bg-secondary/25 animate-ripple" />
+            <span
+              className="absolute inset-0 rounded-full bg-secondary/25 animate-ripple"
+              style={{ animationDelay: '1.1s' }}
+            />
+            <div className="relative w-20 h-20 rounded-full bg-secondary text-on-secondary flex items-center justify-center clay-button-secondary animate-pop">
+              <svg viewBox="0 0 52 52" className="w-11 h-11" aria-hidden="true">
+                <path
+                  d="M14 27 L22 35 L38 18"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeDasharray="48"
+                  style={{ '--draw-length': 48 } as React.CSSProperties}
+                  className="animate-draw"
+                />
+              </svg>
+            </div>
+          </div>
+
+          <Reveal from="up" delay={200}>
+            <>
+              <div className="mt-space-md inline-flex items-center gap-space-xs px-space-md py-1 rounded-full bg-secondary text-on-secondary font-label-sm text-label-sm font-bold uppercase tracking-wider shadow-sm">
+                <span className="material-symbols-outlined text-[15px]">verified</span>
+                Pago aprobado
+              </div>
+
+              <h1 className="mt-space-sm font-headline-lg text-2xl md:text-4xl text-primary font-extrabold tracking-tight">
+                ¡Gracias por tu compra{address.fullName ? `, ${address.fullName.split(' ')[0]}` : ''}!
+              </h1>
+
+              <p className="mt-space-sm font-body-lg text-body-md md:text-body-lg text-on-surface-variant max-w-2xl mx-auto">
+                Tu pedido quedó confirmado y ya está en preparación en nuestra planta de Lanús
+                Oeste. Te enviamos el comprobante a{' '}
+                <strong className="text-on-surface">{address.email || 'tu email'}</strong>.
+              </p>
+
+              {/* Order chips */}
+              <div className="mt-space-lg flex flex-wrap items-center justify-center gap-space-sm">
+                <button
+                  onClick={copyOrderNumber}
+                  className="group px-space-lg py-space-sm rounded-2xl bg-surface-container-lowest clay-card border border-white flex items-center gap-space-sm hover:-translate-y-0.5 transition-all"
                 >
-                  check_circle
-                </span>
-                <div className="absolute top-3 left-4 w-3.5 h-2 rounded-full bg-surface-container-lowest rotate-[-35deg] opacity-90 blur-[0.4px]"></div>
-              </div>
-            </div>
-
-            {/* Little bouncing clean emblems */}
-            <div className="absolute -top-1 -right-2 w-9 h-9 rounded-full bg-gradient-to-br from-surface-container-lowest to-secondary-fixed shadow-[0_8px_16px_rgba(0,119,182,0.2)] flex items-center justify-center animate-bounce">
-              <span className="material-symbols-outlined text-primary text-[18px]">clean_hands</span>
-            </div>
-            <div className="absolute bottom-1 -left-3 w-8 h-8 rounded-full bg-gradient-to-br from-surface-container-lowest to-primary-fixed shadow-[0_6px_14px_rgba(0,119,182,0.18)] flex items-center justify-center">
-              <span className="material-symbols-outlined text-secondary text-[16px]">
-                arrow_back_ios_new
-              </span>
-            </div>
-          </div>
-
-          {/* Badge */}
-          <div className="inline-flex items-center gap-space-xs px-space-md py-1 rounded-full bg-secondary-fixed/50 text-on-secondary-fixed font-label-sm text-label-sm mb-space-sm uppercase tracking-wider shadow-sm font-bold">
-            <span className="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
-            Pedido Confirmado • Pago Acreditado
-          </div>
-
-          {/* Heading */}
-          <h1 className="font-display-hero text-2xl sm:text-4xl md:text-5xl text-on-surface tracking-tight max-w-xl font-extrabold">
-            ¡Gracias por tu compra,{' '}
-            <span className="text-primary font-black">
-              {shippingAddress.fullName.split(' ')[0] || 'Federico'}
-            </span>
-            !
-          </h1>
-
-          <p className="font-body-lg text-base sm:text-body-lg text-on-surface-variant max-w-lg mt-space-xs">
-            Tu pedido <span className="font-label-lg text-primary font-bold">{orderNumber}</span> fue
-            procesado exitosamente. Ya nos encontramos fraccionando y empaquetando tus insumos de
-            limpieza.
-          </p>
-
-          {/* Live Order Tracker Section */}
-          <div className="w-full mt-space-lg p-space-md sm:p-space-lg rounded-2xl bg-surface-container-low/90 shadow-[0_16px_30px_-10px_rgba(9,27,56,0.06)] text-left border border-slate-100">
-            <div className="flex items-center justify-between pb-space-sm border-b border-slate-200/50">
-              <div className="flex items-center gap-space-xs">
-                <span className="material-symbols-outlined text-primary text-[22px]">
-                  local_shipping
-                </span>
-                <span className="font-headline-sm text-headline-sm text-on-surface font-bold">
-                  Seguimiento en Vivo
-                </span>
-              </div>
-              <span className="font-label-sm text-label-sm px-space-sm py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed font-bold">
-                Tiempo real
-              </span>
-            </div>
-
-            <div className="relative mt-space-sm pt-2">
-              <div className="hidden sm:block absolute top-7 left-6 right-6 h-1 bg-surface-container-highest rounded-full z-0">
-                <div
-                  className="h-full bg-secondary rounded-full transition-all duration-700"
-                  style={{ width: `${(activeStep / 3) * 100}%` }}
-                ></div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-space-sm sm:gap-2 relative z-10">
-                {steps.map((st, i) => {
-                  const isPassed = i <= activeStep;
-                  const isCurrent = i === activeStep;
-
-                  return (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => setActiveStep(i)}
-                      className={`flex sm:flex-col items-center gap-space-sm sm:gap-space-xs text-left sm:text-center p-space-xs sm:p-0 transition-opacity rounded-xl ${
-                        isCurrent
-                          ? 'opacity-100 font-bold'
-                          : isPassed
-                          ? 'opacity-90'
-                          : 'opacity-40'
-                      }`}
-                    >
-                      <div
-                        className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-label-sm shadow-md shrink-0 transition-all ${
-                          isCurrent
-                            ? 'bg-primary-container text-on-primary shadow-[0_0_0_4px_rgba(0,119,182,0.2)] animate-pulse'
-                            : isPassed
-                            ? 'bg-secondary text-on-secondary'
-                            : 'bg-surface-container-highest text-on-surface-variant'
-                        }`}
-                      >
-                        <span className="material-symbols-outlined text-[18px]">{st.icon}</span>
-                      </div>
-                      <div>
-                        <p
-                          className={`font-label-md text-label-md ${
-                            isCurrent ? 'text-primary font-bold' : 'text-on-surface'
-                          }`}
-                        >
-                          {st.label}
-                        </p>
-                        <p className="font-body-sm text-xs text-on-surface-variant">{st.time}</p>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          {/* Summary Cards: 2 Columns */}
-          <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-space-md mt-space-md text-left">
-            {/* Shipping Info Card */}
-            <div className="p-space-md rounded-2xl bg-surface-container/70 shadow-[0_8px_20px_-6px_rgba(9,27,56,0.05)] flex flex-col justify-between border border-slate-100">
-              <div className="space-y-space-sm">
-                <div className="flex items-center gap-space-xs text-primary">
-                  <span className="material-symbols-outlined text-[20px]">package_2</span>
-                  <span className="font-label-lg text-label-lg text-on-surface font-bold">
-                    Resumen de Envío Express
-                  </span>
-                </div>
-                <div className="space-y-space-xs font-body-sm text-body-sm text-on-surface-variant">
-                  <div className="flex justify-between">
-                    <span>Orden:</span>
-                    <span className="font-label-md text-label-md text-on-surface font-semibold">
+                  <div className="text-left">
+                    <p className="font-label-sm text-label-sm text-outline uppercase font-bold tracking-wide">
+                      N° de pedido
+                    </p>
+                    <p className="font-headline-sm text-headline-sm text-primary font-black">
                       {orderNumber}
-                    </span>
+                    </p>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Destino:</span>
-                    <span className="font-label-md text-label-md text-on-surface text-right max-w-[210px] font-semibold truncate">
-                      {shippingAddress.street}, {shippingAddress.apartment}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Zona / Localidad:</span>
-                    <span className="font-label-md text-label-md text-on-surface font-semibold">
-                      {shippingAddress.locality}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Ventana Horaria:</span>
-                    <span className="font-label-md text-label-md text-secondary font-bold">
-                      Hoy 15:00 - 19:00 hs
-                    </span>
-                  </div>
-                </div>
-              </div>
+                  <span
+                    className={`material-symbols-outlined text-[19px] transition-colors ${
+                      copied ? 'text-secondary' : 'text-outline group-hover:text-primary'
+                    }`}
+                  >
+                    {copied ? 'check' : 'content_copy'}
+                  </span>
+                </button>
 
-              <div className="mt-space-md pt-space-xs flex items-center justify-between text-on-surface border-t border-slate-200/40">
-                <span className="font-body-sm text-body-sm text-on-surface-variant font-medium">
-                  Total abonado:
-                </span>
-                <div className="flex items-baseline gap-1 text-primary">
-                  <span className="font-price-currency text-price-currency font-bold">$</span>
-                  <span className="font-price-integer text-price-integer font-black text-2xl">
-                    {total > 0 ? total.toLocaleString('es-AR') : '14.170'}
-                  </span>
+                <div className="px-space-lg py-space-sm rounded-2xl bg-surface-container-lowest clay-card border border-white text-left">
+                  <p className="font-label-sm text-label-sm text-outline uppercase font-bold tracking-wide">
+                    Total abonado
+                  </p>
+                  <p className="font-headline-sm text-headline-sm text-primary font-black">
+                    {formatPrice(totals.total)}
+                  </p>
                 </div>
-              </div>
-            </div>
 
-            {/* Payment & Canje Info Card */}
-            <div className="flex flex-col gap-space-sm">
-              <div className="p-space-md rounded-2xl bg-surface-container/70 shadow-[0_8px_20px_-6px_rgba(9,27,56,0.05)] border border-slate-100">
-                <div className="flex items-center gap-space-xs text-primary mb-space-xs">
-                  <span className="material-symbols-outlined text-[20px]">
-                    account_balance_wallet
-                  </span>
-                  <span className="font-label-lg text-label-lg text-on-surface font-bold">
-                    Detalle de Pago
-                  </span>
-                </div>
-                <div className="flex items-center justify-between font-body-sm text-body-sm text-on-surface-variant">
-                  <span>Mercado Pago:</span>
-                  <span className="inline-flex items-center gap-1 font-label-md text-label-md text-secondary font-bold">
-                    <span className="material-symbols-outlined text-[16px]">check_circle</span>
-                    Aprobado
-                  </span>
-                </div>
-                <p className="font-label-sm text-label-sm text-on-surface-variant mt-1 font-medium">
-                  Operación N° 8940217582 • Tarjeta Débito
-                </p>
-              </div>
-
-              <div className="p-space-md rounded-2xl bg-secondary-fixed/30 shadow-[0_8px_20px_-6px_rgba(0,113,104,0.08)] flex items-start gap-space-sm border border-secondary/20">
-                <div className="w-10 h-10 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center shrink-0 shadow-sm">
-                  <span className="material-symbols-outlined text-[20px]">recycling</span>
-                </div>
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-space-xs">
-                    <span className="font-label-md text-label-md text-on-secondary-container uppercase tracking-wider font-bold">
-                      Plan Canje Activado
-                    </span>
-                    <span className="px-1.5 py-0.5 rounded-full bg-surface-container-lowest text-secondary font-label-sm text-label-sm font-bold shadow-xs">
-                      -$860
-                    </span>
-                  </div>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant text-xs">
-                    Recordá tener listo <strong className="text-on-surface">1 bidón vacío limpio de 5L</strong>{' '}
-                    para entregar al chofer al momento de la entrega para validar tu bonificación.
+                <div className="px-space-lg py-space-sm rounded-2xl bg-surface-container-lowest clay-card border border-white text-left">
+                  <p className="font-label-sm text-label-sm text-outline uppercase font-bold tracking-wide">
+                    {shippingMethod === 'pickup' ? 'Retiro' : 'Entrega estimada'}
+                  </p>
+                  <p className="font-headline-sm text-headline-sm text-primary font-black first-letter:uppercase">
+                    {shippingMethod === 'pickup'
+                      ? 'Hoy, desde 2 hs'
+                      : estimatedDelivery(shippingMethod === 'express' ? 0 : 2).replace(
+                          /^el /,
+                          ''
+                        )}
                   </p>
                 </div>
               </div>
-            </div>
-          </div>
-
-          {/* Action CTAs */}
-          <div className="w-full mt-space-lg flex flex-col sm:flex-row items-center justify-center gap-space-sm">
-            <a
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-space-xs px-space-lg py-3.5 rounded-full bg-secondary text-on-secondary font-label-lg text-label-lg shadow-[0_12px_24px_-6px_rgba(0,106,98,0.35)] hover:scale-[1.02] active:scale-[0.98] transition-all font-bold"
-              href="https://wa.me/5491145678900?text=Hola%20Detersur!%20Quiero%20seguir%20el%20pedido%20DET-84920"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <span className="material-symbols-outlined text-[20px]">chat</span>
-              Seguir pedido por WhatsApp
-            </a>
-
-            <button
-              onClick={() => navigateTo('catalog')}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-space-xs px-space-lg py-3.5 rounded-full bg-white text-primary font-label-lg text-label-lg shadow-[0_8px_20px_-4px_rgba(9,27,56,0.10)] hover:bg-slate-50 active:scale-[0.98] transition-all font-bold border border-slate-200"
-            >
-              <span className="material-symbols-outlined text-[20px]">storefront</span>
-              Volver a la tienda
-            </button>
-
-            <button
-              onClick={() => setShowInvoiceModal(true)}
-              type="button"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-space-xs px-space-md py-3 rounded-full text-on-surface-variant hover:text-primary font-label-md text-label-md transition-colors font-semibold"
-            >
-              <span className="material-symbols-outlined text-[18px]">download</span>
-              Descargar Factura B (PDF)
-            </button>
-          </div>
-
-          {/* Seals */}
-          <div className="mt-space-lg pt-space-md flex flex-wrap items-center justify-center gap-space-md text-on-surface-variant font-label-sm text-label-sm opacity-80 border-t border-slate-100">
-            <span className="flex items-center gap-1 font-semibold text-secondary">
-              <span className="material-symbols-outlined text-[16px]">verified</span>
-              Productos con precinto de seguridad
-            </span>
-            <span className="flex items-center gap-1 font-semibold text-primary">
-              <span className="material-symbols-outlined text-[16px]">support_agent</span>
-              Atención al cliente 0800-444-SUR
-            </span>
-            <span className="flex items-center gap-1 font-semibold text-tertiary">
-              <span className="material-symbols-outlined text-[16px]">sync_saved_locally</span>
-              Eco-química retornable
-            </span>
-          </div>
+            </>
+          </Reveal>
         </div>
+      </section>
+
+      {/* Tracker */}
+      <Reveal from="up">
+        <section className="p-space-lg rounded-3xl bg-surface-container-lowest clay-card border border-slate-100">
+          <div className="flex flex-wrap items-center justify-between gap-space-sm mb-space-lg">
+            <h2 className="font-headline-md text-headline-md text-on-surface font-extrabold flex items-center gap-space-xs">
+              <span className="w-9 h-9 rounded-full bg-primary-fixed text-primary flex items-center justify-center">
+                <span className="material-symbols-outlined text-[19px]">conveyor_belt</span>
+              </span>
+              Seguimiento en vivo
+            </h2>
+            <span className="inline-flex items-center gap-1.5 px-space-md py-1 rounded-full bg-secondary-fixed/50 text-on-secondary-fixed-variant font-label-md text-label-md font-bold">
+              <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
+              Actualizado hace instantes
+            </span>
+          </div>
+
+          {/* Desktop horizontal / mobile vertical */}
+          <div className="relative">
+            <div className="hidden md:block absolute top-6 left-[12%] right-[12%] h-1 rounded-full bg-surface-container-high overflow-hidden">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-secondary to-primary-container origin-left transition-transform duration-1000 ease-out"
+                style={{ transform: `scaleX(${activeStep / (TRACKING_STEPS.length - 1)})` }}
+              />
+            </div>
+
+            <ol className="relative grid grid-cols-1 md:grid-cols-4 gap-space-lg md:gap-space-sm">
+              {TRACKING_STEPS.map((step) => {
+                const done = step.id < activeStep;
+                const current = step.id === activeStep;
+
+                return (
+                  <li
+                    key={step.id}
+                    className="flex md:flex-col items-start md:items-center gap-space-sm md:text-center"
+                  >
+                    <span
+                      className={`relative w-12 h-12 rounded-full flex items-center justify-center shrink-0 transition-all duration-500 ${
+                        done
+                          ? 'bg-secondary text-on-secondary'
+                          : current
+                            ? 'bg-primary-container text-on-primary scale-110 animate-pulse-ring'
+                            : 'bg-surface-container-high text-outline'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-[22px]">
+                        {done ? 'check' : step.icon}
+                      </span>
+                    </span>
+
+                    <div className="md:mt-space-xs">
+                      <p
+                        className={`font-label-lg text-label-lg font-bold ${
+                          current
+                            ? 'text-primary'
+                            : done
+                              ? 'text-secondary'
+                              : 'text-on-surface-variant'
+                        }`}
+                      >
+                        {step.label}
+                      </p>
+                      <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+                        {step.detail}
+                      </p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+        </section>
+      </Reveal>
+
+      {/* Summary cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+        <Reveal from="up">
+          <section className="h-full p-space-lg rounded-3xl bg-surface-container-lowest clay-card border border-slate-100">
+            <h3 className="font-headline-sm text-headline-sm text-on-surface font-extrabold flex items-center gap-space-xs mb-space-md">
+              <span className="material-symbols-outlined text-[20px] text-primary">
+                {shippingMethod === 'pickup' ? 'storefront' : 'local_shipping'}
+              </span>
+              {shippingMethod === 'pickup' ? 'Retiro en sucursal' : 'Datos de entrega'}
+            </h3>
+
+            <dl className="space-y-space-sm font-body-md text-body-md">
+              {[
+                { label: 'Destinatario', value: address.fullName || '—' },
+                { label: 'Teléfono', value: address.phone || '—' },
+                ...(shippingMethod === 'pickup'
+                  ? [{ label: 'Sucursal', value: 'Casa Central Lanús Oeste' }]
+                  : [
+                      {
+                        label: 'Domicilio',
+                        value: `${address.street}${address.apartment ? `, ${address.apartment}` : ''}`,
+                      },
+                      {
+                        label: 'Localidad',
+                        value: `${address.locality}${address.postalCode ? ` (CP ${address.postalCode})` : ''}`,
+                      },
+                    ]),
+                {
+                  label: 'Modalidad',
+                  value:
+                    shippingMethod === 'express'
+                      ? 'Express en el día'
+                      : shippingMethod === 'scheduled'
+                        ? 'Programado 48/72 hs'
+                        : 'Retiro en mostrador',
+                },
+              ].map((row) => (
+                <div key={row.label} className="flex items-start justify-between gap-space-sm">
+                  <dt className="text-on-surface-variant shrink-0">{row.label}</dt>
+                  <dd className="text-on-surface font-bold text-right">{row.value}</dd>
+                </div>
+              ))}
+            </dl>
+
+            {address.notes && (
+              <div className="mt-space-md p-space-sm rounded-2xl bg-surface-container-low/70">
+                <p className="font-label-sm text-label-sm text-outline uppercase font-bold tracking-wide mb-1">
+                  Indicaciones
+                </p>
+                <p className="font-body-sm text-body-sm text-on-surface-variant">
+                  {address.notes}
+                </p>
+              </div>
+            )}
+          </section>
+        </Reveal>
+
+        <Reveal from="up" delay={80}>
+          <section className="h-full p-space-lg rounded-3xl bg-surface-container-lowest clay-card border border-slate-100">
+            <h3 className="font-headline-sm text-headline-sm text-on-surface font-extrabold flex items-center gap-space-xs mb-space-md">
+              <span className="material-symbols-outlined text-[20px] text-secondary">
+                receipt_long
+              </span>
+              Pago y facturación
+            </h3>
+
+            <dl className="space-y-space-sm font-body-md text-body-md">
+              <div className="flex items-center justify-between">
+                <dt className="text-on-surface-variant">Medio de pago</dt>
+                <dd className="text-on-surface font-bold">
+                  {paymentMethod === 'mercadopago'
+                    ? 'Mercado Pago'
+                    : paymentMethod === 'transfer'
+                      ? 'Transferencia bancaria'
+                      : 'Efectivo al retirar'}
+                </dd>
+              </div>
+              <div className="flex items-center justify-between">
+                <dt className="text-on-surface-variant">Comprobante</dt>
+                <dd className="text-on-surface font-bold">Factura {invoiceType}</dd>
+              </div>
+              <div className="flex items-center justify-between">
+                <dt className="text-on-surface-variant">Artículos</dt>
+                <dd className="text-on-surface font-bold">{itemCount} unidades</dd>
+              </div>
+
+              <div className="pt-space-sm border-t border-surface-container space-y-1">
+                <div className="flex items-center justify-between">
+                  <dt className="text-on-surface-variant">Subtotal</dt>
+                  <dd className="font-bold">{formatPrice(totals.subtotal)}</dd>
+                </div>
+                {totals.savings > 0 && (
+                  <div className="flex items-center justify-between text-secondary font-bold">
+                    <dt>Descuentos aplicados</dt>
+                    <dd>−{formatPrice(totals.savings)}</dd>
+                  </div>
+                )}
+                <div className="flex items-center justify-between">
+                  <dt className="text-on-surface-variant">Envío</dt>
+                  <dd className="font-bold">
+                    {totals.shippingCost === 0 ? 'Bonificado' : formatPrice(totals.shippingCost)}
+                  </dd>
+                </div>
+                <div className="flex items-end justify-between pt-space-xs">
+                  <dt className="font-label-lg text-label-lg font-extrabold">Total</dt>
+                  <dd className="font-price-integer text-2xl text-primary font-black leading-none">
+                    {formatPrice(totals.total)}
+                  </dd>
+                </div>
+              </div>
+            </dl>
+
+            <button
+              onClick={() => setShowInvoice(true)}
+              className="w-full mt-space-md py-3 rounded-full bg-surface-container-low text-primary font-label-lg text-label-lg font-bold hover:bg-surface-container active:scale-95 transition-all flex items-center justify-center gap-space-xs"
+            >
+              <span className="material-symbols-outlined text-[19px]">description</span>
+              Ver comprobante
+            </button>
+          </section>
+        </Reveal>
       </div>
 
-      {/* Invoice Modal Simulation */}
-      {showInvoiceModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 relative text-left">
-            <div className="flex items-center justify-between pb-3 border-b">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary text-2xl">receipt_long</span>
-                <h3 className="font-bold text-lg text-slate-800">Factura B Electrónica AFIP</h3>
-              </div>
-              <button
-                onClick={() => setShowInvoiceModal(false)}
-                className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:text-black font-bold"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="py-4 text-xs text-slate-700 space-y-2 font-mono">
-              <div className="p-3 bg-slate-50 rounded-xl space-y-1">
-                <p>
-                  <strong>Razón Social:</strong> DETERSUR QUÍMICA S.A.
-                </p>
-                <p>
-                  <strong>CUIT:</strong> 30-71649281-9 • IVA Responsable Inscripto
-                </p>
-                <p>
-                  <strong>Punto de Venta:</strong> 0004 • Comp. Nro: 00084920
-                </p>
-                <p>
-                  <strong>Fecha de Emisión:</strong> 30/09/2026
-                </p>
-              </div>
-
-              <div className="p-3 bg-slate-50 rounded-xl space-y-1">
-                <p>
-                  <strong>Cliente:</strong> {shippingAddress.fullName}
-                </p>
-                <p>
-                  <strong>Condición IVA:</strong> Consumidor Final
-                </p>
-                <p>
-                  <strong>Domicilio:</strong> {shippingAddress.street}, {shippingAddress.locality}
-                </p>
-              </div>
-
-              <div className="border-t border-slate-200 pt-2 space-y-1">
-                <div className="flex justify-between font-bold text-slate-900 text-sm">
-                  <span>TOTAL FACTURADO:</span>
-                  <span>$ {total > 0 ? total.toLocaleString('es-AR') : '14.170'} ARS</span>
-                </div>
-                <p className="text-[10px] text-slate-500">
-                  CAE N°: 74920481920491 • Vto. CAE: 10/10/2026
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => {
-                alert('Descarga completada: Factura_B_DET-84920.pdf');
-                setShowInvoiceModal(false);
-              }}
-              className="w-full py-3 rounded-full bg-primary text-white font-bold text-sm shadow-md hover:bg-primary-container transition-colors"
-            >
-              Guardar Archivo PDF
-            </button>
-          </div>
+      {/* CTAs */}
+      <Reveal from="up">
+        <div className="flex flex-wrap items-center justify-center gap-space-sm">
+          <button
+            onClick={() => navigate({ view: 'catalog' })}
+            className="px-space-xl py-3.5 rounded-full bg-primary-container text-on-primary font-label-lg text-label-lg font-bold clay-button-primary hover:scale-105 active:scale-95 transition-all flex items-center gap-space-xs"
+          >
+            <span className="material-symbols-outlined text-[20px]">storefront</span>
+            Seguir comprando
+          </button>
+          <a
+            href={CONTACT.whatsapp}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-space-xl py-3.5 rounded-full bg-secondary text-on-secondary font-label-lg text-label-lg font-bold clay-button-secondary hover:scale-105 active:scale-95 transition-all flex items-center gap-space-xs"
+          >
+            <span className="material-symbols-outlined text-[20px]">chat</span>
+            Consultar por el pedido
+          </a>
+          <button
+            onClick={() => navigate({ view: 'home' })}
+            className="px-space-xl py-3.5 rounded-full bg-surface-container-lowest text-primary font-label-lg text-label-lg font-bold clay-card border border-slate-100 hover:-translate-y-0.5 active:scale-95 transition-all"
+          >
+            Volver al inicio
+          </button>
         </div>
-      )}
+      </Reveal>
+
+      {/* Recommendations */}
+      <section>
+        <ScrollCarousel
+          label="Para tu próximo pedido"
+          header={
+            <Reveal from="up">
+              <div>
+                <div className="inline-flex items-center gap-1 font-label-sm text-label-sm text-secondary uppercase font-extrabold tracking-widest">
+                  <span className="material-symbols-outlined text-[16px]">redeem</span>
+                  Te puede interesar
+                </div>
+                <h2 className="font-headline-lg text-2xl md:text-headline-lg text-primary font-extrabold tracking-tight">
+                  Para tu próximo pedido
+                </h2>
+              </div>
+            </Reveal>
+          }
+        >
+          {BEST_SELLERS.map((product) => (
+            <div key={product.id} className="snap-item min-w-[250px] w-[250px] shrink-0">
+              <ProductCard product={product} variant="compact" className="h-full" />
+            </div>
+          ))}
+        </ScrollCarousel>
+      </section>
+
+      {showInvoice && <InvoiceModal onClose={() => setShowInvoice(false)} />}
     </div>
   );
 };

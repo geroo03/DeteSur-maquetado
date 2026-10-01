@@ -1,740 +1,793 @@
-import React, { useState } from 'react';
-import { useCart } from '../context/CartContext';
+import React, { useEffect, useMemo, useState } from 'react';
+import { SmartImage } from '../components/SmartImage';
+import { useStore } from '../context/StoreContext';
 import { PRODUCTS } from '../data/products';
+import {
+  CANJE_CREDIT_PER_UNIT,
+  CATEGORY_LABELS,
+  PAYMENT_DISCOUNT_RATE,
+} from '../data/content';
 import { ProductPresentation } from '../types';
+import { ProductCard, Stars } from '../components/ProductCard';
+import { ScrollCarousel } from '../components/Carousel';
+import { Reveal } from '../components/Reveal';
+import { discountPercent, formatPrice, formatUnitPrice, unitFromVolume } from '../lib/format';
+
+const TABS = [
+  { id: 'description', label: 'Descripción', icon: 'description' },
+  { id: 'specs', label: 'Ficha técnica', icon: 'science' },
+  { id: 'usage', label: 'Modo de uso', icon: 'checklist' },
+  { id: 'reviews', label: 'Opiniones', icon: 'reviews' },
+] as const;
+
+type TabId = (typeof TABS)[number]['id'];
 
 export const ProductDetailView: React.FC = () => {
-  const { selectedProduct, addToCart, navigateTo } = useCart();
-  const [selectedPresentation, setSelectedPresentation] = useState<ProductPresentation>(
-    selectedProduct.presentations?.[1] ||
-      selectedProduct.presentations?.[0] || {
-        id: 'standard',
-        title: selectedProduct.packageType,
-        volume: '5L',
-        price: selectedProduct.price,
-        unitPrice: selectedProduct.price,
-      }
+  const { selectedProduct, addToCart, navigate, toggleWishlist, isWishlisted, openDrawer } =
+    useStore();
+
+  const [presentation, setPresentation] = useState<ProductPresentation | undefined>();
+  const [quantity, setQuantity] = useState(1);
+  const [activeTab, setActiveTab] = useState<TabId>('description');
+  const [galleryIndex, setGalleryIndex] = useState(0);
+  const [zoom, setZoom] = useState({ active: false, x: 50, y: 50 });
+
+  const product = selectedProduct;
+
+  // Reset the whole purchase panel when navigating to another product.
+  useEffect(() => {
+    setPresentation(
+      product.presentations?.find((p) => p.isPopular) ?? product.presentations?.[0]
+    );
+    setQuantity(1);
+    setActiveTab('description');
+    setGalleryIndex(0);
+  }, [product.id]);
+
+  const gallery = useMemo(
+    () => (product.gallery?.length ? product.gallery : [product.image]),
+    [product]
   );
-  const [quantity, setQuantity] = useState<number>(1);
-  const [activeTab, setActiveTab] = useState<number>(0);
-  const [isAddedFeedback, setIsAddedFeedback] = useState<boolean>(false);
-  const [showFichaModal, setShowFichaModal] = useState<boolean>(false);
 
-  const unitPrice = selectedPresentation.price;
-  const totalPrice = unitPrice * quantity;
-  const transferPrice = Math.round(totalPrice * 0.9);
+  const unitPrice = presentation?.price ?? product.price;
+  const total = unitPrice * quantity;
+  const transferPrice = Math.round(total * (1 - PAYMENT_DISCOUNT_RATE));
+  const discount = product.listPrice ? discountPercent(product.listPrice, product.price) : 0;
+  const wishlisted = isWishlisted(product.id);
+  const stock = presentation?.stock ?? product.stock;
+  const related = PRODUCTS.filter(
+    (candidate) => candidate.id !== product.id && candidate.category === product.category
+  )
+    .concat(PRODUCTS.filter((candidate) => candidate.id !== product.id))
+    .slice(0, 8);
 
-  const handleAdd = () => {
-    addToCart(selectedProduct, selectedPresentation, quantity);
-    setIsAddedFeedback(true);
-    setTimeout(() => setIsAddedFeedback(false), 2000);
+  const ratingBreakdown = useMemo(() => {
+    const reviews = product.reviews ?? [];
+    return [5, 4, 3, 2, 1].map((star) => ({
+      star,
+      count: reviews.filter((review) => review.rating === star).length,
+      ratio: reviews.length
+        ? reviews.filter((review) => review.rating === star).length / reviews.length
+        : star === 5
+          ? 0.8
+          : star === 4
+            ? 0.15
+            : 0.02,
+    }));
+  }, [product]);
+
+  const onZoomMove = (event: React.MouseEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    setZoom({
+      active: true,
+      x: ((event.clientX - rect.left) / rect.width) * 100,
+      y: ((event.clientY - rect.top) / rect.height) * 100,
+    });
   };
 
-  const complementaryProducts = PRODUCTS.filter((p) => p.id !== selectedProduct.id).slice(0, 4);
-
   return (
-    <div className="flex flex-col w-full gap-space-lg md:gap-space-xl">
-      {/* Breadcrumb Pill Liquid Glass */}
-      <div className="flex items-center">
-        <nav className="inline-flex items-center gap-2 px-space-md py-space-xs rounded-full bg-surface-container-lowest/80 backdrop-blur-xl shadow-[0_10px_24px_-6px_rgba(9,27,56,0.06)] text-on-surface-variant font-label-md text-label-md overflow-x-auto max-w-full border border-slate-100">
+    <div className="flex flex-col w-full gap-space-xl">
+      {/* Breadcrumb */}
+      <Reveal from="down">
+        <nav className="flex flex-wrap items-center gap-1 font-label-md text-label-md text-on-surface-variant">
           <button
-            onClick={() => navigateTo('home')}
-            className="hover:text-primary transition-colors flex items-center gap-1 shrink-0 font-medium"
+            onClick={() => navigate({ view: 'home' })}
+            className="hover:text-primary transition-colors inline-flex items-center gap-1"
           >
             <span className="material-symbols-outlined text-[16px]">home</span>
-            <span>Inicio</span>
+            Inicio
           </button>
-          <span className="material-symbols-outlined text-[14px] text-outline-variant shrink-0">
+          <span className="material-symbols-outlined text-[16px] text-outline-variant">
             chevron_right
           </span>
           <button
-            onClick={() => navigateTo('catalog')}
-            className="hover:text-primary transition-colors shrink-0 font-medium"
+            onClick={() => navigate({ view: 'catalog' })}
+            className="hover:text-primary transition-colors"
           >
-            Química Suelta &amp; Bidones
+            Catálogo
           </button>
-          <span className="material-symbols-outlined text-[14px] text-outline-variant shrink-0">
+          <span className="material-symbols-outlined text-[16px] text-outline-variant">
             chevron_right
           </span>
           <button
-            onClick={() => navigateTo('catalog')}
-            className="hover:text-primary transition-colors shrink-0 font-medium"
+            onClick={() => navigate({ view: 'catalog', category: product.category })}
+            className="hover:text-primary transition-colors"
           >
-            Lavandinas &amp; Cloro
+            {CATEGORY_LABELS.find((c) => c.id === product.category)?.label ??
+              product.category}
           </button>
-          <span className="material-symbols-outlined text-[14px] text-outline-variant shrink-0">
+          <span className="material-symbols-outlined text-[16px] text-outline-variant">
             chevron_right
           </span>
-          <span className="text-primary font-bold truncate shrink-0">
-            {selectedProduct.name}
-          </span>
+          <span className="text-primary font-bold truncate max-w-[220px]">{product.name}</span>
         </nav>
-      </div>
+      </Reveal>
 
-      {/* Main 2-Column Product Detail Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-space-lg lg:gap-gutter-desktop items-start">
-        {/* LEFT COLUMN: Product Visualizer Clay Stage */}
-        <div className="lg:col-span-6 flex flex-col gap-space-md">
-          {/* Big Hero Showcase Clay Card */}
-          <div className="relative w-full rounded-3xl bg-surface-container-lowest p-space-md md:p-space-lg shadow-[0_24px_48px_-12px_rgba(0,119,182,0.14)] overflow-hidden flex flex-col justify-between min-h-[480px] border border-white">
-            {/* Ambient Clay Glow Inside */}
-            <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-secondary-fixed/40 blur-2xl pointer-events-none"></div>
-            <div className="absolute -bottom-16 -left-16 w-60 h-60 rounded-full bg-primary-fixed/50 blur-3xl pointer-events-none"></div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
+        {/* ----------------------- LEFT: gallery ----------------------- */}
+        <div className="lg:col-span-7 space-y-space-md">
+          <Reveal from="up">
+            <div className="relative rounded-3xl bg-gradient-to-br from-secondary-fixed/40 via-surface-container-lowest to-primary-fixed/35 p-space-lg clay-card border border-white overflow-hidden">
+              {/* Ambient */}
+              <div
+                aria-hidden="true"
+                className="absolute -top-16 -left-10 w-56 h-56 rounded-full bg-white/50 blur-3xl animate-drift pointer-events-none"
+              />
 
-            {/* Floating Badges Top Layer */}
-            <div className="relative z-10 flex flex-wrap items-center justify-between gap-space-xs">
-              <span className="inline-flex items-center gap-1.5 px-space-md py-1.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm shadow-[inset_0_2px_4px_rgba(255,255,255,0.7),0_8px_16px_-4px_rgba(0,113,104,0.2)] font-bold">
-                <span
-                  className="material-symbols-outlined text-[16px]"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  eco
-                </span>
-                Ahorrá 25% recargando
-              </span>
-              <span className="inline-flex items-center gap-1 px-space-sm py-1 rounded-full bg-surface-container-high/90 backdrop-blur-md text-primary font-label-sm text-label-sm shadow-sm font-semibold">
-                <span
-                  className="material-symbols-outlined text-[16px]"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  verified
-                </span>
-                Bactericida Certificado
-              </span>
-            </div>
-
-            {/* Central Product Visual Stage */}
-            <div className="relative z-10 my-auto py-space-md flex flex-col items-center justify-center">
-              <div className="relative w-64 h-64 md:w-80 md:h-80 rounded-full bg-gradient-to-b from-secondary-fixed/30 via-primary-fixed/20 to-surface-container flex items-center justify-center shadow-[inset_0_8px_20px_rgba(0,119,182,0.12),0_12px_28px_-6px_rgba(0,0,0,0.04)]">
-                {/* Animated Ambient Chemical Droplets */}
-                <svg
-                  className="absolute inset-0 w-full h-full pointer-events-none animate-[spin_24s_linear_infinite]"
-                  viewBox="0 0 200 200"
-                >
-                  <circle cx="28" cy="70" fill="#70f8e8" opacity="0.6" r="6" />
-                  <circle cx="175" cy="85" fill="#94ccff" opacity="0.8" r="4" />
-                  <circle cx="130" cy="170" fill="#4fdbcc" opacity="0.5" r="7" />
-                  <circle cx="60" cy="155" fill="#0077b6" opacity="0.4" r="3.5" />
-                </svg>
-
-                {/* 3D Product Container Asset */}
-                <div className="relative w-48 h-64 md:w-56 md:h-72 flex items-center justify-center transition-transform hover:scale-105 duration-300">
-                  <img
-                    className="w-full h-full object-contain drop-shadow-[0_22px_28px_rgba(0,119,182,0.28)]"
-                    src={selectedProduct.image}
-                    alt={selectedProduct.name}
-                  />
+              {/* Floating badges */}
+              <div className="relative z-20 flex flex-wrap items-start justify-between gap-space-sm">
+                <div className="flex flex-col gap-1.5">
+                  {discount > 0 && (
+                    <span className="px-space-sm py-1 rounded-full bg-error text-on-error font-label-md text-label-md font-black shadow-md animate-pop">
+                      -{discount}% OFF
+                    </span>
+                  )}
+                  {product.badge && (
+                    <span className="px-space-sm py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-label-md text-label-md font-bold shadow-sm">
+                      {product.badge}
+                    </span>
+                  )}
+                  {product.isBulk && (
+                    <span className="inline-flex items-center gap-1 px-space-sm py-1 rounded-full bg-white/85 backdrop-blur text-on-secondary-fixed-variant font-label-md text-label-md font-bold shadow-sm">
+                      <span className="material-symbols-outlined text-[15px] text-secondary">
+                        recycling
+                      </span>
+                      Apto recarga suelta
+                    </span>
+                  )}
                 </div>
 
-                {/* Active Formula Pill */}
-                <div className="absolute bottom-2 inset-x-auto px-4 py-1.5 rounded-full bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_12px_24px_-4px_rgba(9,27,56,0.12),inset_0_2px_4px_rgba(255,255,255,0.9)] flex items-center gap-2 border border-white">
-                  <span className="w-2.5 h-2.5 rounded-full bg-secondary animate-pulse"></span>
-                  <span className="font-label-sm text-label-sm text-primary tracking-wide font-bold">
-                    FÓRMULA ACTIVA 55g/L CLORO ACTIVO
+                <button
+                  onClick={() => toggleWishlist(product.id)}
+                  aria-label={wishlisted ? 'Quitar de favoritos' : 'Guardar en favoritos'}
+                  className={`w-11 h-11 rounded-full flex items-center justify-center shadow-md backdrop-blur-md transition-all active:scale-90 ${
+                    wishlisted
+                      ? 'bg-error text-on-error animate-wiggle'
+                      : 'bg-white/85 text-outline hover:text-error'
+                  }`}
+                >
+                  <span
+                    className={`material-symbols-outlined text-[22px] ${wishlisted ? 'fill-icon' : ''}`}
+                  >
+                    favorite
+                  </span>
+                </button>
+              </div>
+
+              {/* Stage with hover zoom */}
+              <div
+                onMouseMove={onZoomMove}
+                onMouseLeave={() => setZoom((z) => ({ ...z, active: false }))}
+                className="relative my-space-md h-[280px] md:h-[360px] flex items-center justify-center cursor-zoom-in overflow-hidden rounded-2xl"
+              >
+                {/* Rising droplets */}
+                <div aria-hidden="true" className="absolute inset-0 overflow-hidden">
+                  {[14, 32, 52, 70, 86].map((left, index) => (
+                    <span
+                      key={left}
+                      className="absolute bottom-4 rounded-full bg-white/55 animate-bubble"
+                      style={{
+                        left: `${left}%`,
+                        width: 7 + index * 2.5,
+                        height: 7 + index * 2.5,
+                        animationDelay: `${index * 0.95}s`,
+                      }}
+                    />
+                  ))}
+                </div>
+
+                <SmartImage
+                  key={gallery[galleryIndex]}
+                  src={gallery[galleryIndex]}
+                  alt={product.name}
+                  className="relative w-56 h-56 md:w-72 md:h-72 object-contain drop-shadow-[0_24px_34px_rgba(0,119,182,0.28)] transition-transform duration-300 animate-zoom-in"
+                  style={{
+                    transform: zoom.active ? 'scale(1.55)' : 'scale(1)',
+                    transformOrigin: `${zoom.x}% ${zoom.y}%`,
+                  }}
+                />
+
+                {/* Active formula pill */}
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 px-space-md py-space-xs rounded-full glass-pill flex items-center gap-space-xs">
+                  <span className="material-symbols-outlined text-[17px] text-secondary">
+                    science
+                  </span>
+                  <span className="font-label-md text-label-md text-on-surface font-bold whitespace-nowrap">
+                    {presentation?.title ?? product.packageType}
                   </span>
                 </div>
               </div>
-            </div>
 
-            {/* Spec Pill Bar Bottom */}
-            <div className="relative z-10 pt-space-xs flex items-center justify-around rounded-2xl bg-surface-container-low/70 py-2.5 px-space-sm text-center border border-slate-100">
-              <div>
-                <div className="font-label-sm text-label-sm text-on-surface-variant font-medium">
-                  Densidad 20°C
-                </div>
-                <div className="font-headline-sm text-headline-sm text-primary font-bold">
-                  {selectedProduct.density || '1.09 g/cm³'}
-                </div>
-              </div>
-              <div className="h-6 w-px bg-outline-variant/40"></div>
-              <div>
-                <div className="font-label-sm text-label-sm text-on-surface-variant font-medium">
-                  Pureza de Origen
-                </div>
-                <div className="font-headline-sm text-headline-sm text-secondary font-bold">
-                  {selectedProduct.origin || 'Cloro Virgen'}
-                </div>
-              </div>
-              <div className="h-6 w-px bg-outline-variant/40"></div>
-              <div>
-                <div className="font-label-sm text-label-sm text-on-surface-variant font-medium">
-                  Fraccionado
-                </div>
-                <div className="font-headline-sm text-headline-sm text-on-surface font-bold">
-                  Hermético
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Clay Thumbnails / Gallery Row */}
-          <div className="grid grid-cols-4 gap-space-sm">
-            <button
-              onClick={() => setActiveTab(0)}
-              className={`group p-2 rounded-2xl transition-all text-left flex flex-col items-center gap-1.5 ${
-                activeTab === 0
-                  ? 'bg-surface-container-lowest shadow-[0_8px_16px_-4px_rgba(0,119,182,0.18),inset_0_2px_4px_rgba(255,255,255,0.95)] ring-2 ring-primary'
-                  : 'bg-surface-container-lowest/80 hover:bg-surface-container-lowest shadow-sm'
-              }`}
-            >
-              <div className="w-full h-14 rounded-xl bg-surface-container-low flex items-center justify-center overflow-hidden">
-                <span className="material-symbols-outlined text-[28px] text-primary group-hover:scale-110 transition-transform">
-                  water_full
-                </span>
-              </div>
-              <span className="font-label-sm text-label-sm text-primary font-bold text-center leading-tight">
-                Bidón 5L Tradicional
-              </span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab(1)}
-              className={`group p-2 rounded-2xl transition-all text-left flex flex-col items-center gap-1.5 ${
-                activeTab === 1
-                  ? 'bg-surface-container-lowest shadow-[0_8px_16px_-4px_rgba(0,119,182,0.18),inset_0_2px_4px_rgba(255,255,255,0.95)] ring-2 ring-primary'
-                  : 'bg-surface-container-lowest/80 hover:bg-surface-container-lowest shadow-sm'
-              }`}
-            >
-              <div className="w-full h-14 rounded-xl bg-surface-container-low flex items-center justify-center overflow-hidden">
-                <span className="material-symbols-outlined text-[28px] text-secondary group-hover:scale-110 transition-transform">
-                  autorenew
-                </span>
-              </div>
-              <span className="font-label-sm text-label-sm text-on-surface-variant text-center leading-tight">
-                Recarga a Granel
-              </span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab(2)}
-              className={`group p-2 rounded-2xl transition-all text-left flex flex-col items-center gap-1.5 ${
-                activeTab === 2
-                  ? 'bg-surface-container-lowest shadow-[0_8px_16px_-4px_rgba(0,119,182,0.18),inset_0_2px_4px_rgba(255,255,255,0.95)] ring-2 ring-primary'
-                  : 'bg-surface-container-lowest/80 hover:bg-surface-container-lowest shadow-sm'
-              }`}
-            >
-              <div className="w-full h-14 rounded-xl bg-surface-container-low flex items-center justify-center overflow-hidden">
-                <span className="material-symbols-outlined text-[28px] text-tertiary group-hover:scale-110 transition-transform">
-                  shield
-                </span>
-              </div>
-              <span className="font-label-sm text-label-sm text-on-surface-variant text-center leading-tight">
-                Sello ANMAT
-              </span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab(3)}
-              className={`group p-2 rounded-2xl transition-all text-left flex flex-col items-center gap-1.5 ${
-                activeTab === 3
-                  ? 'bg-surface-container-lowest shadow-[0_8px_16px_-4px_rgba(0,119,182,0.18),inset_0_2px_4px_rgba(255,255,255,0.95)] ring-2 ring-primary'
-                  : 'bg-surface-container-lowest/80 hover:bg-surface-container-lowest shadow-sm'
-              }`}
-            >
-              <div className="w-full h-14 rounded-xl bg-surface-container-low flex items-center justify-center overflow-hidden">
-                <span className="material-symbols-outlined text-[28px] text-outline group-hover:scale-110 transition-transform">
-                  factory
-                </span>
-              </div>
-              <span className="font-label-sm text-label-sm text-on-surface-variant text-center leading-tight">
-                Planta &amp; Tambor
-              </span>
-            </button>
-          </div>
-        </div>
-
-        {/* RIGHT COLUMN: Purchase Panel & Dynamic Spec Card */}
-        <div className="lg:col-span-6 flex flex-col gap-space-md">
-          {/* Primary Main Product Card (Claymorphic) */}
-          <div className="rounded-3xl bg-surface-container-lowest p-space-md md:p-space-lg shadow-[0_20px_44px_-10px_rgba(0,119,182,0.12),inset_0_3px_6px_rgba(255,255,255,0.95)] flex flex-col gap-space-md border border-white">
-            {/* Header Badges & Serial Code */}
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <div className="flex items-center gap-2">
-                <span className="px-space-sm py-1 rounded-full bg-primary-fixed text-on-primary-fixed-variant font-label-sm text-label-sm font-bold uppercase tracking-wider">
-                  Detersur Profesional
-                </span>
-                <span className="font-label-sm text-label-sm text-outline">
-                  SKU: {selectedProduct.sku || 'DET-LAV-55G5L'}
-                </span>
-              </div>
-              <div className="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm bg-surface-container-low px-2.5 py-1 rounded-full">
-                <span className="material-symbols-outlined text-[15px] text-secondary">
-                  verified_user
-                </span>
-                <span>R.N.P.A. N° {selectedProduct.rnpa || '0254129'}</span>
-              </div>
-            </div>
-
-            {/* Main Product Title */}
-            <div>
-              <h1 className="font-headline-lg text-2xl md:text-3xl font-extrabold text-on-background tracking-tight">
-                {selectedProduct.name}
-              </h1>
-              <p className="font-body-md text-body-md text-on-surface-variant mt-1">
-                {selectedProduct.description}
-              </p>
-            </div>
-
-            {/* Review Rating & Volume Sold */}
-            <div className="flex items-center gap-space-md pb-space-xs border-b border-surface-container-low">
-              <div className="flex items-center gap-1">
-                <div className="flex text-amber-500">
-                  {[...Array(5)].map((_, i) => (
-                    <span
-                      key={i}
-                      className="material-symbols-outlined text-[18px]"
-                      style={{ fontVariationSettings: "'FILL' 1" }}
-                    >
-                      star
+              {/* Spec pills */}
+              <div className="relative z-10 grid grid-cols-2 sm:grid-cols-4 gap-space-sm">
+                {[
+                  { icon: 'science', label: 'Densidad', value: product.density ?? 'Estándar' },
+                  { icon: 'water_drop', label: 'Dilución', value: product.dilution ?? 'Listo uso' },
+                  { icon: 'speed', label: 'pH', value: product.ph ?? 'Neutro' },
+                  { icon: 'inventory_2', label: 'Stock', value: `${stock} u.` },
+                ].map((spec) => (
+                  <div
+                    key={spec.label}
+                    className="p-space-sm rounded-2xl bg-white/80 backdrop-blur border border-white text-center"
+                  >
+                    <span className="material-symbols-outlined text-[19px] text-primary">
+                      {spec.icon}
                     </span>
-                  ))}
-                </div>
-                <span className="font-label-lg text-label-lg text-on-surface ml-1 font-bold">
-                  {selectedProduct.rating || 4.9}
-                </span>
-                <span className="font-body-sm text-body-sm text-on-surface-variant">
-                  ({selectedProduct.reviewsCount || 128} opiniones)
-                </span>
-              </div>
-              <span className="hidden sm:inline-block w-1.5 h-1.5 rounded-full bg-outline-variant"></span>
-              <div className="hidden sm:flex items-center gap-1 font-label-sm text-label-sm text-secondary font-bold">
-                <span className="material-symbols-outlined text-[16px]">local_fire_department</span>
-                <span>{selectedProduct.salesCount || '+1.450 bidones vendidos este mes'}</span>
+                    <p className="font-label-sm text-label-sm text-outline uppercase font-bold tracking-wide">
+                      {spec.label}
+                    </p>
+                    <p className="font-label-md text-label-md text-on-surface font-extrabold leading-tight">
+                      {spec.value}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
+          </Reveal>
 
-            {/* Presentation Selector (Interactive Clay Tiles) */}
-            <div className="flex flex-col gap-space-xs">
-              <div className="flex items-center justify-between">
-                <label className="font-label-lg text-label-lg text-on-surface font-bold">
-                  Seleccioná la Presentación:
-                </label>
-                <span className="font-label-sm text-label-sm text-primary font-bold">
-                  A granel disponible en planta
-                </span>
-              </div>
+          {/* Thumbnails */}
+          {gallery.length > 1 && (
+            <div className="flex items-center gap-space-sm">
+              {gallery.map((image, index) => (
+                <button
+                  key={image}
+                  onClick={() => setGalleryIndex(index)}
+                  aria-label={`Ver imagen ${index + 1}`}
+                  aria-current={galleryIndex === index}
+                  className={`w-20 h-20 rounded-2xl bg-surface-container-low flex items-center justify-center overflow-hidden border-2 transition-all duration-300 ${
+                    galleryIndex === index
+                      ? 'border-primary-container scale-105 clay-card'
+                      : 'border-transparent hover:border-primary-fixed-dim opacity-70 hover:opacity-100'
+                  }`}
+                >
+                  <SmartImage src={image} alt="" className="w-14 h-14 object-contain" />
+                </button>
+              ))}
+            </div>
+          )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-xs">
-                {(selectedProduct.presentations || []).map((pres) => {
-                  const isSelected = selectedPresentation.id === pres.id;
+          {/* Tabs */}
+          <Reveal from="up">
+            <div className="rounded-3xl bg-surface-container-lowest clay-card border border-slate-100 overflow-hidden">
+              <div className="flex overflow-x-auto no-scrollbar border-b border-surface-container">
+                {TABS.map((tab) => {
+                  const active = activeTab === tab.id;
                   return (
                     <button
-                      key={pres.id}
-                      type="button"
-                      onClick={() => setSelectedPresentation(pres)}
-                      className={`group p-space-sm rounded-2xl text-left transition-all relative overflow-hidden ${
-                        isSelected
-                          ? 'bg-primary text-on-primary shadow-[0_12px_24px_-6px_rgba(0,119,182,0.35),inset_0_2px_4px_rgba(255,255,255,0.45)]'
-                          : 'bg-surface-container-low hover:bg-surface-container text-on-surface'
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      aria-selected={active}
+                      className={`relative shrink-0 px-space-md py-space-md font-label-lg text-label-lg font-bold flex items-center gap-1.5 transition-colors ${
+                        active ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'
                       }`}
                     >
-                      {pres.badge && (
-                        <div className="absolute top-1 right-2">
-                          <span
-                            className={`px-2 py-0.5 rounded-full font-label-sm text-[10px] tracking-tight font-bold ${
-                              isSelected
-                                ? 'bg-secondary text-on-secondary'
-                                : 'bg-secondary-container text-on-secondary-container'
-                            }`}
-                          >
-                            {pres.badge}
-                          </span>
-                        </div>
-                      )}
-                      <div className="flex items-center justify-between">
-                        <span
-                          className={`font-label-md text-label-md font-semibold ${
-                            isSelected ? 'text-white' : 'text-on-surface'
-                          }`}
-                        >
-                          {pres.title}
+                      <span className="material-symbols-outlined text-[18px]">{tab.icon}</span>
+                      {tab.label}
+                      {tab.id === 'reviews' && product.reviewsCount && (
+                        <span className="px-1.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-[10px] font-black">
+                          {product.reviewsCount}
                         </span>
-                      </div>
-                      <div
-                        className={`mt-1 font-price-integer text-[20px] font-extrabold ${
-                          isSelected ? 'text-white' : 'text-primary'
+                      )}
+                      <span
+                        className={`absolute bottom-0 left-space-md right-space-md h-0.5 rounded-full bg-primary-container origin-left transition-transform duration-300 ${
+                          active ? 'scale-x-100' : 'scale-x-0'
                         }`}
-                      >
-                        $ {pres.price.toLocaleString('es-AR')}
-                      </div>
-                      <div
-                        className={`font-body-sm text-xs ${
-                          isSelected ? 'text-primary-fixed opacity-90' : 'text-on-surface-variant'
-                        }`}
-                      >
-                        ${pres.unitPrice}/L {pres.isEco ? '• Traé tu bidón limpio' : ''}
-                      </div>
+                      />
                     </button>
                   );
                 })}
               </div>
-            </div>
 
-            {/* Price Display Block */}
-            <div className="p-space-md rounded-2xl bg-surface-container-low/80 flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm border border-slate-100">
-              <div>
-                <div className="flex items-baseline gap-2">
-                  <span className="font-price-integer text-3xl md:text-4xl text-primary font-black leading-none">
-                    $ {totalPrice.toLocaleString('es-AR')}
+              <div className="p-space-lg" key={activeTab}>
+                {activeTab === 'description' && (
+                  <div className="space-y-space-md animate-fade-up">
+                    <p className="font-body-lg text-body-md md:text-body-lg text-on-surface">
+                      {product.description}
+                    </p>
+                    {product.details && (
+                      <p className="font-body-md text-body-md text-on-surface-variant">
+                        {product.details}
+                      </p>
+                    )}
+                    {product.tags && (
+                      <div className="flex flex-wrap gap-space-xs pt-space-xs">
+                        {product.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="px-space-md py-1 rounded-full bg-primary-fixed/60 text-on-primary-fixed-variant font-label-md text-label-md font-bold"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {activeTab === 'specs' && (
+                  <dl className="grid grid-cols-1 sm:grid-cols-2 gap-space-sm animate-fade-up">
+                    {[
+                      { label: 'Marca', value: product.brand },
+                      { label: 'Presentación base', value: product.packageType },
+                      { label: 'SKU', value: product.sku ?? '—' },
+                      { label: 'RNPA / Registro', value: product.rnpa ?? 'No aplica' },
+                      { label: 'Densidad', value: product.density ?? 'Estándar' },
+                      { label: 'pH', value: product.ph ?? 'Neutro' },
+                      { label: 'Dilución recomendada', value: product.dilution ?? 'Listo para usar' },
+                      { label: 'Origen del activo', value: product.origin ?? 'Nacional' },
+                      { label: 'Stock disponible', value: `${product.stock} unidades` },
+                      {
+                        label: 'Venta mayorista',
+                        value: product.isBulk ? 'Sí, por bulto y granel' : 'Por unidad',
+                      },
+                    ].map((row) => (
+                      <div
+                        key={row.label}
+                        className="flex items-start justify-between gap-space-sm p-space-sm rounded-xl bg-surface-container-low/60"
+                      >
+                        <dt className="font-label-md text-label-md text-on-surface-variant">
+                          {row.label}
+                        </dt>
+                        <dd className="font-label-md text-label-md text-on-surface font-bold text-right">
+                          {row.value}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
+
+                {activeTab === 'usage' && (
+                  <div className="animate-fade-up">
+                    {product.usage?.length ? (
+                      <ul className="space-y-space-sm">
+                        {product.usage.map((item, index) => (
+                          <li
+                            key={item}
+                            className="flex items-start gap-space-sm animate-fade-up"
+                            style={{ animationDelay: `${index * 70}ms` }}
+                          >
+                            <span className="w-7 h-7 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant flex items-center justify-center font-label-md font-black shrink-0">
+                              {index + 1}
+                            </span>
+                            <span className="font-body-md text-body-md text-on-surface pt-0.5">
+                              {item}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="font-body-md text-body-md text-on-surface-variant">
+                        Consultá el rótulo del envase para las indicaciones de uso y seguridad.
+                      </p>
+                    )}
+
+                    {product.dilution && (
+                      <div className="mt-space-md p-space-md rounded-2xl bg-primary-fixed/40 border border-white">
+                        <p className="font-label-lg text-label-lg text-primary font-bold flex items-center gap-1.5">
+                          <span className="material-symbols-outlined text-[18px]">
+                            water_drop
+                          </span>
+                          Dilución recomendada
+                        </p>
+                        <p className="mt-1 font-body-md text-body-md text-on-surface-variant">
+                          {product.dilution}. Usar guantes y no mezclar con otros químicos.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {activeTab === 'reviews' && (
+                  <div className="space-y-space-lg animate-fade-up">
+                    {/* Summary */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-space-lg items-center">
+                      <div className="text-center">
+                        <p className="font-price-integer text-5xl text-primary font-black leading-none">
+                          {product.rating ?? '—'}
+                        </p>
+                        <Stars rating={product.rating ?? 0} size={18} />
+                        <p className="font-label-md text-label-md text-on-surface-variant mt-1">
+                          {product.reviewsCount} opiniones
+                        </p>
+                      </div>
+
+                      <div className="sm:col-span-2 space-y-1">
+                        {ratingBreakdown.map((row) => (
+                          <div key={row.star} className="flex items-center gap-space-sm">
+                            <span className="w-8 font-label-md text-label-md text-on-surface-variant font-bold shrink-0">
+                              {row.star}★
+                            </span>
+                            <div className="flex-1 h-2 rounded-full bg-surface-container-high overflow-hidden">
+                              <div
+                                className="h-full rounded-full bg-amber-400 transition-[width] duration-1000 ease-out"
+                                style={{ width: `${Math.max(2, row.ratio * 100)}%` }}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Reviews */}
+                    {product.reviews?.length ? (
+                      <div className="space-y-space-md">
+                        {product.reviews.map((review, index) => (
+                          <div
+                            key={review.id}
+                            className="p-space-md rounded-2xl bg-surface-container-low/60 animate-fade-up"
+                            style={{ animationDelay: `${index * 80}ms` }}
+                          >
+                            <div className="flex items-start gap-space-sm">
+                              <div className="w-10 h-10 rounded-full bg-primary-fixed text-on-primary-fixed-variant flex items-center justify-center font-label-md font-black shrink-0">
+                                {review.initials}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex flex-wrap items-center gap-space-xs">
+                                  <span className="font-label-lg text-label-lg text-on-surface font-bold">
+                                    {review.author}
+                                  </span>
+                                  {review.verified && (
+                                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-secondary-fixed/60 text-on-secondary-fixed-variant font-label-sm text-[10px] font-bold">
+                                      <span className="material-symbols-outlined text-[12px]">
+                                        verified
+                                      </span>
+                                      Compra verificada
+                                    </span>
+                                  )}
+                                  <span className="font-label-sm text-label-sm text-outline">
+                                    {review.date}
+                                  </span>
+                                </div>
+                                <Stars rating={review.rating} size={13} />
+                                <p className="mt-1 font-label-lg text-label-lg text-on-surface font-bold">
+                                  {review.title}
+                                </p>
+                                <p className="mt-0.5 font-body-md text-body-md text-on-surface-variant">
+                                  {review.body}
+                                </p>
+                                {review.helpful && (
+                                  <button className="mt-space-sm font-label-md text-label-md text-primary font-bold hover:underline inline-flex items-center gap-1">
+                                    <span className="material-symbols-outlined text-[15px]">
+                                      thumb_up
+                                    </span>
+                                    Útil ({review.helpful})
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="font-body-md text-body-md text-on-surface-variant text-center py-space-md">
+                        Este producto todavía no tiene opiniones publicadas.
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </Reveal>
+        </div>
+
+        {/* ----------------------- RIGHT: purchase ----------------------- */}
+        <div className="lg:col-span-5">
+          <Reveal from="up">
+            <div className="lg:sticky lg:top-32 space-y-space-md">
+              <div className="p-space-lg rounded-3xl bg-surface-container-lowest clay-card border border-slate-100">
+                <div className="flex items-center justify-between gap-space-sm">
+                  <span className="font-label-sm text-label-sm text-secondary font-extrabold uppercase tracking-widest">
+                    {product.brand}
                   </span>
-                  <span className="font-label-sm text-label-sm text-outline uppercase font-bold">
-                    IVA Incluido
-                  </span>
+                  {product.sku && (
+                    <span className="font-label-sm text-label-sm text-outline">
+                      SKU {product.sku}
+                    </span>
+                  )}
                 </div>
-                <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">
-                  Precio final con Factura A o B automática
-                </p>
-              </div>
-              <div className="flex flex-col items-start sm:items-end gap-1">
-                <span className="px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-bold flex items-center gap-1 shadow-sm">
-                  <span className="material-symbols-outlined text-[16px]">payments</span>
-                  10% OFF pagando con Transferencia ($ {transferPrice.toLocaleString('es-AR')})
-                </span>
-                <span className="font-label-sm text-label-sm text-primary font-medium">
-                  Hasta 3 cuotas sin interés con MODO / Débito
-                </span>
-              </div>
-            </div>
 
-            {/* Quantity Stepper & Add to Cart Clay Button */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-space-md pt-space-xs">
-              {/* Stepper */}
-              <div className="flex items-center justify-between p-1.5 rounded-full bg-surface-container-low shadow-[inset_0_2px_4px_rgba(9,27,56,0.06)] shrink-0 sm:w-40">
-                <button
-                  type="button"
-                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                  className="w-10 h-10 rounded-full bg-surface-container-lowest text-primary flex items-center justify-center shadow-[0_4px_10px_-2px_rgba(0,119,182,0.18),inset_0_2px_4px_rgba(255,255,255,0.9)] hover:scale-95 active:scale-90 transition-transform font-bold"
-                >
-                  <span className="material-symbols-outlined text-[20px]">remove</span>
-                </button>
-                <span className="font-headline-md text-headline-md text-on-surface font-bold px-3 select-none">
-                  {quantity}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setQuantity((q) => q + 1)}
-                  className="w-10 h-10 rounded-full bg-surface-container-lowest text-primary flex items-center justify-center shadow-[0_4px_10px_-2px_rgba(0,119,182,0.18),inset_0_2px_4px_rgba(255,255,255,0.9)] hover:scale-95 active:scale-90 transition-transform font-bold"
-                >
-                  <span className="material-symbols-outlined text-[20px]">add</span>
-                </button>
-              </div>
+                <h1 className="mt-space-xs font-headline-lg text-xl md:text-2xl text-on-surface font-extrabold leading-tight tracking-tight">
+                  {product.name}
+                </h1>
 
-              {/* Add CTA */}
-              <button
-                type="button"
-                onClick={handleAdd}
-                className={`flex-1 py-4 px-space-lg rounded-full font-headline-sm text-headline-sm font-bold shadow-[0_16px_32px_-8px_rgba(0,119,182,0.42),inset_0_3px_6px_rgba(255,255,255,0.45)] transition-all active:scale-[0.98] flex items-center justify-center gap-space-sm group ${
-                  isAddedFeedback
-                    ? 'bg-secondary text-white'
-                    : 'bg-primary-container hover:bg-primary text-on-primary'
-                }`}
-              >
-                <span className="material-symbols-outlined text-[24px] group-hover:rotate-12 transition-transform">
-                  {isAddedFeedback ? 'check_circle' : 'shopping_bag'}
-                </span>
-                <span>{isAddedFeedback ? '¡Agregado con éxito!' : 'Agregar al carrito'}</span>
-                <span className="ml-auto sm:ml-2 px-2.5 py-0.5 rounded-full bg-on-primary/20 text-on-primary font-label-sm text-label-sm">
-                  Stock Inmediato
-                </span>
-              </button>
-            </div>
-
-            {/* Logistics & Pickup Benefits Card */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-space-xs pt-space-xs">
-              <div className="p-space-sm rounded-2xl bg-surface-container-low/60 flex items-start gap-space-xs border border-slate-100">
-                <span className="material-symbols-outlined text-[22px] text-secondary shrink-0">
-                  storefront
-                </span>
-                <div>
-                  <div className="font-label-md text-label-md text-on-surface font-bold">
-                    Retiro Gratis Hoy
-                  </div>
-                  <div className="font-body-sm text-body-sm text-on-surface-variant">
-                    Planta Lanús Oeste &amp; Avellaneda
-                  </div>
+                {/* Rating + sales */}
+                <div className="mt-space-sm flex flex-wrap items-center gap-space-sm">
+                  {product.rating && (
+                    <button
+                      onClick={() => setActiveTab('reviews')}
+                      className="inline-flex items-center gap-1.5 hover:underline"
+                    >
+                      <Stars rating={product.rating} size={15} />
+                      <span className="font-label-md text-label-md text-on-surface-variant font-semibold">
+                        {product.rating} ({product.reviewsCount})
+                      </span>
+                    </button>
+                  )}
+                  {product.salesCount && (
+                    <span className="inline-flex items-center gap-1 px-space-sm py-0.5 rounded-full bg-secondary-fixed/40 text-on-secondary-fixed-variant font-label-sm text-label-sm font-bold">
+                      <span className="material-symbols-outlined text-[14px]">
+                        local_fire_department
+                      </span>
+                      {product.salesCount}
+                    </span>
+                  )}
                 </div>
-              </div>
-              <div className="p-space-sm rounded-2xl bg-surface-container-low/60 flex items-start gap-space-xs border border-slate-100">
-                <span className="material-symbols-outlined text-[22px] text-primary shrink-0">
-                  local_shipping
-                </span>
-                <div>
-                  <div className="font-label-md text-label-md text-on-surface font-bold">
-                    Envío Express GBA
+
+                {/* Presentations */}
+                {product.presentations && product.presentations.length > 0 && (
+                  <div className="mt-space-md">
+                    <p className="font-label-sm text-label-sm text-outline uppercase tracking-wider font-bold mb-space-sm">
+                      Elegí la presentación
+                    </p>
+                    <div className="space-y-space-xs">
+                      {product.presentations.map((option) => {
+                        const active = presentation?.id === option.id;
+                        return (
+                          <button
+                            key={option.id}
+                            onClick={() => {
+                              setPresentation(option);
+                              setQuantity(1);
+                            }}
+                            className={`w-full p-space-sm rounded-2xl border text-left flex items-center gap-space-sm transition-all duration-300 ${
+                              active
+                                ? 'bg-primary-fixed/50 border-primary-container clay-card scale-[1.015]'
+                                : 'bg-surface-container-low/60 border-slate-200 hover:border-primary-fixed-dim'
+                            }`}
+                          >
+                            <span
+                              className={`material-symbols-outlined text-[22px] shrink-0 transition-colors ${
+                                active ? 'text-primary fill-icon' : 'text-outline-variant'
+                              }`}
+                            >
+                              {active ? 'radio_button_checked' : 'radio_button_unchecked'}
+                            </span>
+
+                            <div className="flex-1 min-w-0">
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <span className="font-label-lg text-label-lg text-on-surface font-bold">
+                                  {option.title}
+                                </span>
+                                {option.isPopular && (
+                                  <span className="px-1.5 py-0.5 rounded-full bg-primary-container text-on-primary font-label-sm text-[10px] font-black">
+                                    Más elegido
+                                  </span>
+                                )}
+                                {option.isEco && (
+                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-secondary text-on-secondary font-label-sm text-[10px] font-black">
+                                    <span className="material-symbols-outlined text-[11px]">
+                                      recycling
+                                    </span>
+                                    Eco
+                                  </span>
+                                )}
+                              </div>
+                              {option.badge && (
+                                <span className="font-label-sm text-label-sm text-outline block">
+                                  {option.badge}
+                                </span>
+                              )}
+                              <span className="font-label-sm text-label-sm text-secondary font-bold">
+                                {formatUnitPrice(option.unitPrice, unitFromVolume(option.volume))}
+                              </span>
+                            </div>
+
+                            <span className="font-price-integer text-lg text-primary font-black shrink-0">
+                              {formatPrice(option.price)}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <div className="font-body-sm text-body-sm text-on-surface-variant">
-                    Gratis superando $25.000
+                )}
+
+                {/* Price block */}
+                <div className="mt-space-md p-space-md rounded-2xl bg-gradient-to-br from-primary-fixed/40 to-secondary-fixed/30 border border-white">
+                  {product.listPrice && (
+                    <div className="flex items-center gap-space-sm">
+                      <span className="font-label-md text-label-md text-outline line-through">
+                        {formatPrice(product.listPrice * quantity)}
+                      </span>
+                      <span className="px-1.5 py-0.5 rounded-full bg-error text-on-error font-label-sm text-[10px] font-black">
+                        -{discount}%
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex items-baseline gap-1">
+                    <span className="font-price-currency text-price-currency text-primary font-bold">
+                      $
+                    </span>
+                    <span className="font-price-integer text-4xl text-primary font-black leading-none">
+                      {total.toLocaleString('es-AR')}
+                    </span>
+                    <span className="font-label-md text-label-md text-on-surface-variant ml-1">
+                      ARS
+                    </span>
                   </div>
+                  <p className="mt-1 font-label-md text-label-md text-secondary font-bold">
+                    {formatPrice(transferPrice)} con transferencia o efectivo (10% OFF)
+                  </p>
+                  <p className="font-label-sm text-label-sm text-on-surface-variant">
+                    3 cuotas sin interés de {formatPrice(Math.round(total / 3))}
+                  </p>
+                  {product.isBulk && (
+                    <p className="mt-1 font-label-sm text-label-sm text-on-secondary-fixed-variant inline-flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[14px] text-secondary">
+                        recycling
+                      </span>
+                      Devolviendo el envase recuperás {formatPrice(CANJE_CREDIT_PER_UNIT)} por
+                      unidad
+                    </p>
+                  )}
                 </div>
-              </div>
-              <div className="p-space-sm rounded-2xl bg-surface-container-low/60 flex items-start gap-space-xs border border-slate-100">
-                <span className="material-symbols-outlined text-[22px] text-tertiary shrink-0">
-                  download
-                </span>
-                <div>
-                  <div className="font-label-md text-label-md text-on-surface font-bold">
-                    Ficha Técnica
+
+                {/* Stepper + CTA */}
+                <div className="mt-space-md flex items-center gap-space-sm">
+                  <div className="flex items-center gap-0.5 bg-surface-container-low rounded-full p-1 clay-inset shrink-0">
+                    <button
+                      onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                      aria-label="Quitar una unidad"
+                      className="w-10 h-10 rounded-full bg-white text-on-surface-variant flex items-center justify-center shadow-xs active:scale-90 transition-all"
+                    >
+                      <span className="material-symbols-outlined text-[19px]">remove</span>
+                    </button>
+                    <span className="w-10 text-center font-label-lg text-label-lg font-black tabular-nums">
+                      {quantity}
+                    </span>
+                    <button
+                      onClick={() => setQuantity((q) => Math.min(stock, 99, q + 1))}
+                      aria-label="Agregar una unidad"
+                      className="w-10 h-10 rounded-full bg-primary-container text-on-primary flex items-center justify-center shadow-xs active:scale-90 transition-all"
+                    >
+                      <span className="material-symbols-outlined text-[19px]">add</span>
+                    </button>
                   </div>
+
                   <button
-                    onClick={() => setShowFichaModal(true)}
-                    className="font-body-sm text-body-sm text-primary hover:underline font-bold text-left"
+                    onClick={() => addToCart(product, presentation, quantity)}
+                    className="shine flex-1 py-3.5 rounded-full bg-primary-container text-on-primary font-label-lg text-label-lg font-bold clay-button-primary hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-space-xs"
                   >
-                    Descargar PDF (MSDS)
+                    <span className="material-symbols-outlined text-[20px] relative z-[2]">
+                      add_shopping_cart
+                    </span>
+                    <span className="relative z-[2]">Agregar al carrito</span>
                   </button>
                 </div>
-              </div>
-            </div>
-          </div>
 
-          {/* Informative Accordions Section */}
-          <div className="flex flex-col gap-space-xs">
-            {/* Accordion 1: Modo de Uso y Dilución */}
-            <details
-              className="group rounded-2xl bg-surface-container-lowest p-space-md shadow-[0_8px_20px_-6px_rgba(9,27,56,0.06)] border border-slate-100"
-              open
-            >
-              <summary className="flex items-center justify-between cursor-pointer list-none font-headline-sm text-headline-sm text-on-surface font-bold">
-                <span className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary text-[20px]">
-                    science
-                  </span>
-                  Modo de uso, proporciones &amp; dilución recomendada
-                </span>
-                <span className="material-symbols-outlined text-outline group-open:rotate-180 transition-transform">
-                  expand_more
-                </span>
-              </summary>
-              <div className="mt-space-sm pt-space-xs text-on-surface-variant font-body-md text-body-md space-y-2 border-t border-surface-container-low">
-                <p>
-                  <strong>Pisos y baldosas:</strong> Diluir 1 taza (200 ml) de Lavandina Concentrada Detersur en 10 litros de agua limpia. Fregar y dejar actuar durante 5 minutos para eliminar el 99,9% de hongos y bacterias.
-                </p>
-                <p>
-                  <strong>Desinfección de agua para consumo (emergencias):</strong> Aplicar 2 gotas por litro de agua. Aguardar 30 minutos antes de consumir.
-                </p>
-                <p>
-                  <strong>Sanitización de frutas y verduras:</strong> 1 cucharadita (5 ml) por cada 5 litros de agua. Enjuagar con abundante agua potable luego del reposo.
-                </p>
-              </div>
-            </details>
-
-            {/* Accordion 2: Composición Química y Seguridad */}
-            <details className="group rounded-2xl bg-surface-container-lowest p-space-md shadow-[0_8px_20px_-6px_rgba(9,27,56,0.06)] border border-slate-100">
-              <summary className="flex items-center justify-between cursor-pointer list-none font-headline-sm text-headline-sm text-on-surface font-bold">
-                <span className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-secondary text-[20px]">
-                    sanitizer
-                  </span>
-                  Composición química &amp; precauciones de seguridad
-                </span>
-                <span className="material-symbols-outlined text-outline group-open:rotate-180 transition-transform">
-                  expand_more
-                </span>
-              </summary>
-              <div className="mt-space-sm pt-space-xs text-on-surface-variant font-body-md text-body-md space-y-2 border-t border-surface-container-low">
-                <p>
-                  <strong>Principio Activo:</strong> Hipoclorito de sodio al 5.5% (concentración nominal 55 gramos de cloro activo por litro a la salida de fábrica).
-                </p>
-                <p>
-                  <strong>Estabilizantes alcalinos:</strong> Hidróxido de sodio (&lt;0.5%) para prolongar la vida útil del cloro activo frente a los rayos UV.
-                </p>
-                <p className="text-red-600 font-medium flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[18px]">warning</span>
-                  ¡No mezclar con amoníacos, vinagres ni detergentes ácidos! Produce vapores tóxicos.
-                </p>
-              </div>
-            </details>
-
-            {/* Accordion 3: Escala Mayorista B2B */}
-            <details className="group rounded-2xl bg-surface-container-lowest p-space-md shadow-[0_8px_20px_-6px_rgba(9,27,56,0.06)] border border-slate-100">
-              <summary className="flex items-center justify-between cursor-pointer list-none font-headline-sm text-headline-sm text-on-surface font-bold">
-                <span className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-tertiary text-[20px]">
-                    inventory_2
-                  </span>
-                  Descuentos por escala mayorista &amp; pallet cerrado
-                </span>
-                <span className="material-symbols-outlined text-outline group-open:rotate-180 transition-transform">
-                  expand_more
-                </span>
-              </summary>
-              <div className="mt-space-sm pt-space-xs text-on-surface-variant font-body-md text-body-md border-t border-surface-container-low overflow-x-auto">
-                <table className="w-full text-left font-body-sm text-body-sm">
-                  <thead>
-                    <tr className="text-outline border-b border-surface-container-low">
-                      <th className="py-1">Volumen</th>
-                      <th className="py-1">Descuento</th>
-                      <th className="py-1">Precio x Bidón 5L</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-surface-container-low">
-                    <tr>
-                      <td className="py-2 font-medium">De 4 a 19 bidones (Caja/Bulto)</td>
-                      <td className="py-2 text-secondary font-bold">10% OFF</td>
-                      <td className="py-2 font-bold text-on-surface">$ 3.105</td>
-                    </tr>
-                    <tr>
-                      <td className="py-2 font-medium">De 20 a 59 bidones</td>
-                      <td className="py-2 text-secondary font-bold">18% OFF</td>
-                      <td className="py-2 font-bold text-on-surface">$ 2.829</td>
-                    </tr>
-                    <tr>
-                      <td className="py-2 font-medium">Pallet Completo (60 bidones)</td>
-                      <td className="py-2 text-primary font-bold">25% OFF</td>
-                      <td className="py-2 font-bold text-primary">$ 2.587</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </details>
-          </div>
-        </div>
-      </div>
-
-      {/* Wholesale B2B Callout Banner */}
-      <div className="relative w-full rounded-2xl bg-gradient-to-r from-surface-container via-surface-container-highest to-secondary-fixed/40 p-space-md md:p-space-lg shadow-[0_16px_36px_-8px_rgba(0,119,182,0.12),inset_0_2px_4px_rgba(255,255,255,0.8)] overflow-hidden flex flex-col md:flex-row items-center justify-between gap-space-md border border-white">
-        <div className="flex items-center gap-space-md">
-          <div className="w-14 h-14 rounded-2xl bg-surface-container-lowest text-primary flex items-center justify-center shrink-0 shadow-[0_8px_16px_-4px_rgba(0,119,182,0.25)]">
-            <span className="material-symbols-outlined text-[32px]">pallet</span>
-          </div>
-          <div>
-            <span className="font-label-sm text-label-sm text-secondary font-bold uppercase tracking-wider">
-              Venta Directa a Comercios &amp; Limpieza Institucional
-            </span>
-            <h3 className="font-headline-md text-headline-md text-on-surface font-bold">
-              ¿Tenés lavadero, consorcio o distribuidora?
-            </h3>
-            <p className="font-body-sm text-body-sm text-on-surface-variant">
-              Cotizá tambores de 200L o cisternas de 1000L con flete bonificado en Zona Sur y CABA.
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-space-sm shrink-0 w-full md:w-auto">
-          <a
-            href="https://wa.me/5491145678900?text=Hola%20Detersur!%20Solicito%20Lista%20Mayorista%20B2B"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full md:w-auto text-center px-space-lg py-3 rounded-full bg-surface-container-lowest text-primary font-label-lg text-label-lg font-bold shadow-[0_8px_18px_-4px_rgba(9,27,56,0.1),inset_0_2px_4px_rgba(255,255,255,0.9)] hover:bg-white transition-all"
-          >
-            Consultar Lista Mayorista
-          </a>
-        </div>
-      </div>
-
-      {/* Complementary Cross-Selling Carousel */}
-      <section className="flex flex-col gap-space-md mt-space-md">
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="font-label-sm text-label-sm text-secondary uppercase font-bold tracking-widest">
-              Recomendados para vos
-            </span>
-            <h2 className="font-headline-lg text-2xl md:text-headline-lg text-on-background font-extrabold">
-              También te puede servir
-            </h2>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter-desktop">
-          {complementaryProducts.map((item) => (
-            <div
-              key={item.id}
-              className="group rounded-2xl bg-surface-container-lowest p-space-md shadow-[0_16px_32px_-8px_rgba(0,119,182,0.10),inset_0_3px_6px_rgba(255,255,255,0.95)] flex flex-col justify-between hover:-translate-y-1 transition-all border border-slate-100"
-            >
-              <div>
-                <div
-                  onClick={() => navigateTo('product-detail', item.id)}
-                  className="relative w-full h-44 rounded-xl bg-gradient-to-b from-surface-container-low to-surface-container/60 flex items-center justify-center overflow-hidden mb-space-sm cursor-pointer"
+                <button
+                  onClick={() => {
+                    addToCart(product, presentation, quantity);
+                    navigate({ view: 'checkout' });
+                  }}
+                  className="w-full mt-space-sm py-3 rounded-full bg-secondary text-on-secondary font-label-lg text-label-lg font-bold clay-button-secondary hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-space-xs"
                 >
-                  <span className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-surface-container-lowest/90 backdrop-blur-md text-primary font-label-sm text-label-sm font-semibold shadow-xs">
-                    {item.packageType}
-                  </span>
-                  <img
-                    className="w-28 h-36 object-contain group-hover:scale-105 transition-transform drop-shadow-[0_12px_18px_rgba(0,119,182,0.2)]"
-                    src={item.image}
-                    alt={item.name}
-                  />
-                </div>
-                <span className="font-label-sm text-label-sm text-secondary font-bold">
-                  {item.brand}
-                </span>
-                <h4
-                  onClick={() => navigateTo('product-detail', item.id)}
-                  className="font-headline-sm text-headline-sm text-on-surface line-clamp-1 mt-0.5 font-bold cursor-pointer hover:text-primary transition-colors"
-                >
-                  {item.name}
-                </h4>
-                <p className="font-body-sm text-body-sm text-on-surface-variant mt-1 line-clamp-2">
-                  {item.details || item.description}
-                </p>
-              </div>
+                  <span className="material-symbols-outlined text-[20px]">bolt</span>
+                  Comprar ahora
+                </button>
 
-              <div className="mt-space-md pt-space-xs border-t border-surface-container-low flex items-center justify-between">
-                <div>
-                  <span className="font-label-sm text-label-sm text-outline">Precio final</span>
-                  <div className="font-price-integer text-price-integer text-primary font-extrabold">
-                    $ {item.price.toLocaleString('es-AR')}
+                <button
+                  onClick={openDrawer}
+                  className="w-full mt-space-xs py-2 font-label-md text-label-md text-primary font-bold hover:underline"
+                >
+                  Ver mi carrito
+                </button>
+
+                {/* Stock bar */}
+                <div className="mt-space-md">
+                  <div className="flex items-center justify-between font-label-sm text-label-sm mb-1">
+                    <span className="text-on-surface-variant font-semibold">
+                      Disponibilidad
+                    </span>
+                    <span
+                      className={`font-bold ${stock <= 30 ? 'text-warning' : 'text-secondary'}`}
+                    >
+                      {stock <= 30 ? `Últimas ${stock} unidades` : `${stock} en stock`}
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full bg-surface-container-high overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-[width] duration-1000 ease-out ${
+                        stock <= 30 ? 'bg-warning' : 'bg-secondary'
+                      }`}
+                      style={{ width: `${Math.min(100, (stock / 200) * 100)}%` }}
+                    />
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => addToCart(item, item.presentations?.[0], 1)}
-                  className="w-11 h-11 rounded-full bg-primary-container text-on-primary flex items-center justify-center shadow-[0_8px_16px_-4px_rgba(0,119,182,0.35),inset_0_2px_4px_rgba(255,255,255,0.45)] hover:bg-primary transition-all active:scale-95"
-                  title="Agregar al carrito"
-                >
-                  <span className="material-symbols-outlined text-[20px]">
-                    add_shopping_cart
-                  </span>
-                </button>
               </div>
+
+              {/* Logistics card */}
+              <div className="p-space-md rounded-3xl bg-surface-container-lowest clay-card border border-slate-100 space-y-space-sm">
+                {[
+                  {
+                    icon: 'local_shipping',
+                    title: 'Envío express en el día',
+                    body: 'CABA y GBA Sur con pedidos antes de las 14 hs. Gratis desde $25.000.',
+                  },
+                  {
+                    icon: 'storefront',
+                    title: 'Retiro sin cargo',
+                    body: 'Lanús Oeste, Quilmes y Avellaneda con carga rápida en mostrador.',
+                  },
+                  {
+                    icon: 'receipt_long',
+                    title: 'Factura A y B',
+                    body: 'Comprobante fiscal electrónico con CUIT emitido en el acto.',
+                  },
+                  {
+                    icon: 'verified_user',
+                    title: 'Certificación ANMAT',
+                    body: 'Ficha técnica y hoja de seguridad disponibles para habilitaciones.',
+                  },
+                ].map((item) => (
+                  <div key={item.title} className="flex items-start gap-space-sm">
+                    <span className="w-9 h-9 rounded-full bg-primary-fixed/60 text-primary flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
+                    </span>
+                    <div>
+                      <p className="font-label-lg text-label-lg text-on-surface font-bold">
+                        {item.title}
+                      </p>
+                      <p className="font-body-sm text-body-sm text-on-surface-variant">
+                        {item.body}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </div>
+
+      {/* Related carousel */}
+      <section>
+        <ScrollCarousel
+          label="Productos relacionados"
+          header={
+            <Reveal from="up">
+              <div>
+                <div className="inline-flex items-center gap-1 font-label-sm text-label-sm text-secondary uppercase font-extrabold tracking-widest">
+                  <span className="material-symbols-outlined text-[16px]">category</span>
+                  Suelen comprarse juntos
+                </div>
+                <h2 className="font-headline-lg text-2xl md:text-headline-lg text-primary tracking-tight font-extrabold">
+                  Complementá tu pedido
+                </h2>
+              </div>
+            </Reveal>
+          }
+        >
+          {related.map((item) => (
+            <div
+              key={item.id}
+              className="snap-item min-w-[250px] w-[250px] sm:min-w-[260px] sm:w-[260px] shrink-0"
+            >
+              <ProductCard product={item} variant="compact" className="h-full" />
             </div>
           ))}
-        </div>
+        </ScrollCarousel>
       </section>
-
-      {/* Ficha Técnica Modal */}
-      {showFichaModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 relative">
-            <div className="flex items-center justify-between pb-3 border-b">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary text-2xl">description</span>
-                <h3 className="font-bold text-lg text-slate-800">Hoja de Seguridad MSDS (ANMAT)</h3>
-              </div>
-              <button
-                onClick={() => setShowFichaModal(false)}
-                className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:text-black"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="py-4 text-sm text-slate-600 space-y-2">
-              <p>
-                <strong>Producto:</strong> Lavandina Concentrada 55g/L Cloro Activo
-              </p>
-              <p>
-                <strong>Certificado ANMAT:</strong> R.N.P.A. N° 0254129 / R.N.E. N° 02003841
-              </p>
-              <p>
-                <strong>Fórmula química:</strong> NaClO al 5.5% en solución acuosa estabilizada.
-              </p>
-              <p>
-                <strong>Envasado y almacenamiento:</strong> Conservar al abrigo de la luz solar directa y calor extremo en envases de polietileno de alta densidad (PEAD).
-              </p>
-              <div className="p-3 rounded-xl bg-teal-50 border border-teal-200 text-teal-800 text-xs">
-                Ficha técnica descargada y verificada para uso bromatológico e institucional.
-              </div>
-            </div>
-            <button
-              onClick={() => {
-                alert('Descargando Ficha_Tecnica_Lavandina_55g_ANMAT.pdf...');
-                setShowFichaModal(false);
-              }}
-              className="w-full py-3 rounded-full bg-primary text-white font-bold text-sm shadow-md hover:bg-primary-container transition-colors"
-            >
-              Descargar PDF Oficial
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
